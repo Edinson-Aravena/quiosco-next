@@ -11,11 +11,12 @@ type CategoryIconProps = {
 export default function CategoryIcon({ category }: CategoryIconProps) {
 
     const params = useParams<{category : string}>();
-    console.log(params);
+    
 
     return (
         <div className={` ${category.slug === params.category ? 'bg-sky-200' : ''}
-                            flex item-center gap-4 w-full border-t border-gray-200 p-3 last-of-type:border-b`}>
+                            flex item-center gap-4 w-full border-t border-gray-200
+                            p-3 last-of-type:border-b`}>
 
             <div className="relative w-16 h-16">
                 <Image
