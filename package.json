@@ -15,8 +15,10 @@
     "@heroicons/react": "^2.2.0",
     "@prisma/client": "^6.13.0",
     "next": "^14.2.31",
+    "next-cloudinary": "^6.16.0",
     "react": "^18",
     "react-dom": "^18",
+    "react-icons": "^5.5.0",
     "react-toastify": "^11.0.5",
     "zod": "^4.0.17",
     "zustand": "^5.0.7"
