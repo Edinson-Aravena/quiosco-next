@@ -1,13 +1,16 @@
 "use client"
 
 import { ProductSchema } from "@/src/schema";
-import ProductForm from "./ProductForm";
-import { toast } from "react-toastify";
-import { createProduct } from "@/actions/create-product-action";
-import { useRouter } from "next/navigation";
 
-export default function AddProductForm({ children }: { children: React.ReactNode }) {
+import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { updateProduct } from "@/actions/update-product-action";
+
+export default function EditProductForm({ children }: { children: React.ReactNode }) {
     const router = useRouter()
+    const params = useParams()
+    const id = +params.id!
 
     const handleSubmit = async (formData: FormData) => {
         const data = {
@@ -16,6 +19,7 @@ export default function AddProductForm({ children }: { children: React.ReactNode
             categoryId: formData.get('categoryId'),
             image: formData.get('image'),
         }
+        
         const result = ProductSchema.safeParse(data)
         if (!result.success) {
             result.error.issues.forEach(issue => {
@@ -24,7 +28,9 @@ export default function AddProductForm({ children }: { children: React.ReactNode
             return
         }
 
-        const response = await createProduct(result.data)
+        
+
+        const response = await updateProduct(result.data, id)
         if (response?.errors) {
             response.errors.forEach(issue => {
                 toast.error(issue.message)
@@ -32,7 +38,7 @@ export default function AddProductForm({ children }: { children: React.ReactNode
             return
         }
 
-        toast.success('Producto creado correctamente')
+        toast.success('Producto actualizado correctamente')
         router.push('/admin/products')
     }
 
@@ -50,7 +56,7 @@ export default function AddProductForm({ children }: { children: React.ReactNode
                 <input
                     type="submit"
                     className="bg-indigo-600 hover:bg-indigo-800 text-white w-full mt-5 p-3 uppercase font-bold cursor-pointer"
-                    value='Registrar producto'
+                    value='Guardar Cambios'
                 />
 
             </form>

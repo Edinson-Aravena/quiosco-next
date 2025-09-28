@@ -1,15 +1,25 @@
 "use client"
+import { getImagePath } from '@/src/utils'
 import { CldUploadWidget } from 'next-cloudinary'
+import Image from 'next/image'
+import { useState } from 'react'
 import { TbPhotoPlus } from 'react-icons/tb'
 
-export default function ImageUpload() {
+export default function ImageUpload({image} : {image: string | undefined}) {
+    const [imageUrl,setImageUrl] = useState('')
+
+
     return (
 
 
 
         <CldUploadWidget
             onSuccess={(result, {widget}) =>{
-                console.log(result)
+                if(result.event === 'success'){
+                    widget.close()
+                    //@ts-ignore
+                    setImageUrl(result.info?.secure_url)
+                }
             }}
             uploadPreset="quiosco"
             options={{ maxFiles: 1 }}
@@ -35,9 +45,43 @@ export default function ImageUpload() {
                                 size={50}
                             />
                             <p className='text-lg font-semibold'>Agregar Imagen</p>
+
+                            {imageUrl && (
+                                <div
+                                    className='absolute inset-0 w-full h-full'
+                                >
+                                    <Image
+                                        fill
+                                        style={{objectFit: 'contain'}}
+                                        src={imageUrl}
+                                        alt='Imagen del producto'
+                                    />
+
+                                </div>
+                            )}
                         </div>
 
                     </div>
+
+                    {image && !imageUrl &&(
+                        <div className='space-y-2 flex flex-col items-center justify-center'> 
+                            <label>Imagen Actual:</label>
+                            <div className='relative w-64 h-64 mt-2'>
+                                <Image
+                                    fill
+                                    style={{objectFit: 'contain'}} 
+                                    src={getImagePath(image)}
+                                    alt='Imagen Producto'
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    <input
+                        type='hidden'
+                        name='image'
+                        defaultValue={imageUrl || image} 
+                    />
                 </>
             )}
         </CldUploadWidget>
