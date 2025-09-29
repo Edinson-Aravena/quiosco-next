@@ -1,6 +1,7 @@
 import { ProductsWithCategory } from "@/app/admin/products/page"
 import { formatCurrency } from "@/src/utils"
 import Link from "next/link"
+import DeleteProductButton from "@/components/products/DeleteProductButton"
 
 type ProductTableProps = {
     products: ProductsWithCategory
@@ -47,6 +48,7 @@ export default function ProductTable({ products }: ProductTableProps) {
                                                 href={`/admin/products/${product.id}/edit`}
                                                 className="text-indigo-600 hover:text-indigo-800"
                                             >Editar <span className="sr-only">, {product.name}</span> </Link>
+                                            <DeleteProductButton id={product.id} name={product.name} />
                                         </td>
                                     </tr>
                                 ))}
