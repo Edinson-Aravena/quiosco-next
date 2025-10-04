@@ -2,16 +2,24 @@ import { completeOrder } from "@/actions/complete-order-action"
 import { OrderWithProducts } from "@/src/types"
 import { formatCurrency } from "@/src/utils"
 
-type OrderCardProps = {
-    order : OrderWithProducts
+interface OrderCardProps {
+  order: OrderWithProducts;
+  onComplete: (orderId: number) => Promise<void>;
 }
 
+export default function OrderCard({ order, onComplete }: OrderCardProps) {
+  const handleCompleteOrder = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('order_id', order.id.toString());
+      await completeOrder(formData);
+      await onComplete(order.id);
+    } catch (error) {
+      console.error('Error al completar la orden:', error);
+    }
+  }
 
-export default function OrderCard({ order } : OrderCardProps) {
-
-    
-
-    return (
+  return (
         <section
             aria-labelledby="summary-heading"
             className="mt-16 rounded-lg bg-gray-50 px-4 py-6 sm:p-6  lg:mt-0 lg:p-8 space-y-4"
@@ -38,18 +46,14 @@ export default function OrderCard({ order } : OrderCardProps) {
                 </div>
             </dl>
 
-            <form action={completeOrder}>
-                <input 
-                    type="hidden"
-                    value={order.id}
-                    name="order_id"
-                 />
-                <input
-                    type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-800 text-white w-full mt-5 p-3 uppercase font-bold cursor-pointer"
-                    value='Marcar Orden Completada'
-                />
-            </form>
+            <form action={handleCompleteOrder}>
+      <button
+        type="submit"
+        className="bg-indigo-600 hover:bg-indigo-800 text-white w-full mt-5 p-3 uppercase font-bold cursor-pointer"
+      >
+        Completar Orden
+      </button>
+    </form>
         </section>
     )
 }
