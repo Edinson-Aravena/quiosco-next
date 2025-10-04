@@ -1,12 +1,13 @@
-// Importación de componentes necesarios para el layout
+ // Importación de componentes necesarios para el layout
 import OrderSidebar from "@/components/order/OrderSidebar";  // Barra lateral con categorías
 import OrderSummary from "@/components/order/OrderSummary";  // Resumen del pedido
+import ReadyOrdersSidebar from "@/components/order/ReadyOrdersSidebar";  // Sidebar de órdenes listas
 import ToastNotification from "@/components/ui/ToastNotification";  // Componente para notificaciones
 
 // Componente de layout principal para la sección de pedidos
 export default function RootLayout({
     children,  // Contenido que se renderizará dentro del layout
-}: Readonly<{ 
+}: Readonly<{
     children: React.ReactNode;  // Tipo para children que asegura que sea contenido válido de React
 }>) {
     return (
@@ -23,6 +24,11 @@ export default function RootLayout({
 
                 {/* Barra lateral derecha con el resumen del pedido */}
                 <OrderSummary />
+
+                {/* Sidebar de órdenes listas - visible solo en pantallas extra grandes */}
+                <div className="hidden 2xl:block">
+                    <ReadyOrdersSidebar />
+                </div>
             </div>
 
             {/* Componente para mostrar notificaciones toast */}

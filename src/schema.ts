@@ -7,3 +7,9 @@ export const OrderSchema = z.object({
   total: z.number(),
   order: z.array(z.any()),
 });
+
+export const OrderIdSchema = z.object({
+  orderId: z.string()
+    .transform((val) => parseInt(val, 10))
+    .refine((val) => val > 0, { message: 'ID de orden inválido' })
+});

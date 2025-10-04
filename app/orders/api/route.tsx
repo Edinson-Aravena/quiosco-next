@@ -3,15 +3,20 @@ import { prisma } from "@/src/lib/prisma";
 
 export async function GET(){
     const orders = await prisma.order.findMany({
-        take: 6,
+        take: 10,
         where: {
             orderReadyAT: {
                 not : null
             }
         },
-        orderBy: {
-            orderReadyAT: 'desc'
-        },
+        orderBy: [
+            {
+                orderDeliveredAt: 'asc' // Las no entregadas primero (null values first)
+            },
+            {
+                orderReadyAT: 'desc'
+            }
+        ],
         include: {
             orderProducts: {
                 include: {

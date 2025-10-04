@@ -25,13 +25,14 @@ model Product {
 }
 
 model Order {
-  id            Int             @id @default(autoincrement())
-  name          String
-  total         Float
-  date          DateTime        @default(now())
-  status        Boolean         @default(false)
-  orderReadyAT  DateTime?
-  orderProducts OrderProducts[]
+  id               Int             @id @default(autoincrement())
+  name             String
+  total            Float
+  date             DateTime        @default(now())
+  status           Boolean         @default(false)
+  orderReadyAT     DateTime?
+  orderDeliveredAt DateTime?
+  orderProducts    OrderProducts[]
 }
 
 model OrderProducts {
