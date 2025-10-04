@@ -5,7 +5,7 @@ import { useStore } from "@/src/store"
 // Componente para mostrar los detalles de cada producto en el pedido
 import ProductsDetails from "./ProductsDetails";
 // Hook para memorizar el cálculo del total y evitar cálculos innecesarios
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 // Función para formatear el total como moneda
 import { formatCurrency } from '../../src/utils/index';
 // Acción para crear la orden (enviar el pedido)
@@ -25,6 +25,9 @@ const OrderSummary = () => {
 
   // Calcula el total a pagar sumando el precio por cantidad de cada producto
   const total = useMemo(() => order.reduce((total, item) => total + (item.quantity * item.price), 0), [order]);
+
+  // Agregar un contador de alertas
+  const [alertCount, setAlertCount] = useState(0);
 
   // Maneja el envío del formulario y la validación de datos
   const handleCreateOrder = async (formData: FormData) => {
@@ -59,6 +62,13 @@ const OrderSummary = () => {
     clearOrder();
   }
 
+  // Resetear el contador después de 5 segundos
+  const resetAlertCount = () => {
+    setTimeout(() => {
+      setAlertCount(0);
+    }, 5000);
+  };
+
   return (
     // Aside que contiene el resumen del pedido, con estilos responsivos
     <aside className="lg:h-screen lg:overflow-y-scroll md:w-64 lg:w-96 p-5">
@@ -88,12 +98,24 @@ const OrderSummary = () => {
             className="w-full mt-10 space-y-5"
             action={handleCreateOrder}
           >
-            {/* Campo de entrada para el nombre del cliente */}
             <input 
               type="text" 
-              placeholder="Nombre del cliente"
-              className="bg-white border border-gray-100 p-2 w-full" // Estilos para el input: fondo blanco, borde gris, padding y ancho completo
-              name="name" // Nombre del campo para identificarlo en el formData
+              placeholder="Numero de mesa"
+              className="bg-white border border-gray-100 p-2 w-full"
+              name="name"
+              pattern="[0-9]*"
+              onKeyDown={(e) => {
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault();
+                  if (alertCount < 3) {
+                    toast.error('Solo se permiten números');
+                    setAlertCount(prev => prev + 1);
+                    if (alertCount === 2) {
+                      resetAlertCount();
+                    }
+                  }
+                }
+              }}
             />
 
             {/* Botón de tipo submit para enviar el formulario */}
