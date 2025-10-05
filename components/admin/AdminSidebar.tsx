@@ -2,19 +2,45 @@ import Logo from "../ui/Logo"
 import AdminRoute from "./AdminRoute"
 
 const adminNavigation = [
-    {url: '/admin/orders', text: 'Ordenes', blank: false},
-    {url: '/admin/products', text: 'Productos', blank: false},
-    {url: '/order/cafe', text: 'Ver Quiosco', blank: true},
+    {url: '/admin/orders', text: 'Órdenes', blank: false, icon: '📋'},
+    {url: '/admin/products', text: 'Productos', blank: false, icon: '🍽️'},
+    {url: '/order/cafe', text: 'Ver Quiosco', blank: true, icon: '🏪'},
 ]
 
 export default function AdminSidebar() {
 
     return (
-        <>
-            <Logo />
-            <div className="space-y-3 ">
-                <p className="mt-10 uppercase font-bold text-sm text-gray-600 text-center">Navegación</p>
-                <nav className="flex flex-col">
+        <div className="h-full flex flex-col bg-slate-900 text-white">
+            {/* Header con Logo */}
+            <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-4 shadow-md border-b border-slate-700">
+                <div className="flex items-center justify-between">
+                    <Logo />
+                    <span className="text-xs text-slate-400">Admin Panel</span>
+                </div>
+            </div>
+
+            {/* Información del Admin */}
+            <div className="px-6 py-6 border-b border-slate-800">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-2xl shadow">
+                        👨‍💼
+                    </div>
+                    <div className="flex-1">
+                        <p className="text-white font-semibold text-lg">Panel Admin</p>
+                        <p className="text-slate-400 text-sm">Gestión del sistema</p>
+                    </div>
+                    <button className="text-slate-300 text-sm bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded">
+                        Ver Perfil
+                    </button>
+                </div>
+            </div>
+
+            {/* Navegación */}
+            <div className="flex-1 px-4 py-6 overflow-y-auto">
+                <p className="uppercase font-bold text-xs text-slate-400 mb-4 px-2 tracking-wider">
+                    Navegación
+                </p>
+                <nav className="flex flex-col gap-2">
                     {adminNavigation.map(link => (
                         <AdminRoute
                             key={link.url}
@@ -23,7 +49,18 @@ export default function AdminSidebar() {
                     ))}
                 </nav>
             </div>
-        </>
 
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-slate-800">
+                <div className="flex items-center justify-between">
+                    <p className="text-slate-500 text-xs">
+                        © 2024 Sistema de Gestión
+                    </p>
+                    <div className="text-slate-400 text-xs">
+                        v1.0.0
+                    </div>
+                </div>
+            </div>
+        </div>
     )
 }

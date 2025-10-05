@@ -14,7 +14,7 @@ import { createOrder } from "@/actions/create-order-action";
 import { OrderSchema } from "@/src/schema";
 // Importación para mostrar notificaciones toast
 import { toast } from "react-toastify";
-import { ShoppingCartIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import { ShoppingCartIcon, CheckCircleIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 
 // Componente que muestra el resumen del pedido y el formulario de confirmación
 const OrderSummary = () => {
@@ -28,6 +28,9 @@ const OrderSummary = () => {
 
   // Agregar un contador de alertas
   const [alertCount, setAlertCount] = useState(0);
+
+  // Estado para controlar si el acordeón está abierto (solo en móvil)
+  const [isOpen, setIsOpen] = useState(false);
 
   // Maneja el envío del formulario y la validación de datos
   const handleCreateOrder = async (formData: FormData) => {
@@ -71,26 +74,43 @@ const OrderSummary = () => {
 
   return (
     // Aside que contiene el resumen del pedido, con estilos responsivos
-    <aside className="lg:h-screen lg:overflow-y-scroll md:w-64 lg:w-96 p-5 bg-gradient-to-b from-amber-50 to-white">
-      {/* Header con título mejorado */}
-      <div className="sticky top-0 bg-gradient-to-b from-amber-50 to-transparent pb-4 mb-4 z-10">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <ShoppingCartIcon className="h-10 w-10 text-amber-600" />
-          <h1 className="text-4xl text-center font-black text-gray-800">
-            Mi Pedido
-          </h1>
+    <aside className="w-full lg:w-80 xl:w-96 lg:h-screen lg:overflow-y-scroll bg-gradient-to-b from-amber-50 to-white lg:border-l border-gray-200 shadow-md lg:shadow-none">
+      {/* Header con título mejorado - Clickeable en móvil */}
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full p-4 sm:p-5 lg:sticky lg:top-0 bg-gradient-to-b from-amber-50 to-transparent z-10 hover:bg-amber-100 lg:hover:bg-transparent transition-colors border-b lg:border-b-0 border-amber-200 cursor-pointer lg:cursor-auto"
+      >
+        <div className="flex items-center justify-between gap-2 sm:gap-3 mb-2">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-center lg:justify-center">
+            <ShoppingCartIcon className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-amber-600" />
+            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl text-center font-black text-gray-800">
+              Mi Pedido
+            </h1>
+          </div>
+          {/* Icono de chevron solo visible en móvil */}
+          <div className="lg:hidden">
+            {isOpen ? (
+              <ChevronUpIcon className="h-6 w-6 text-amber-600" />
+            ) : (
+              <ChevronDownIcon className="h-6 w-6 text-amber-600" />
+            )}
+          </div>
         </div>
         <div className="flex items-center justify-center">
           <div className="h-1 w-20 bg-amber-500 rounded-full"></div>
         </div>
+        {/* Badge con contador de productos y total */}
         {order.length > 0 && (
           <div className="mt-3 text-center">
-            <span className="inline-block bg-amber-100 text-amber-800 px-4 py-1 rounded-full text-sm font-semibold">
-              {order.length} {order.length === 1 ? 'producto' : 'productos'}
+            <span className="inline-block bg-amber-100 text-amber-800 px-4 py-1.5 rounded-full text-sm font-semibold">
+              {order.length} {order.length === 1 ? 'producto' : 'productos'} • {formatCurrency(total)}
             </span>
           </div>
         )}
       </div>
+
+      {/* Contenido del acordeón - Oculto en móvil cuando isOpen es false */}
+      <div className={`${isOpen ? 'block' : 'hidden'} lg:block p-4 sm:p-5 pt-0`}>
 
       {/* Si el pedido está vacío, muestra un mensaje */}
       {order.length === 0 ? (
@@ -200,6 +220,7 @@ const OrderSummary = () => {
           </form>
         </div>
       )}
+      </div>
     </aside>
   );
 };
