@@ -51,7 +51,7 @@ export default function CategoryIcon({ category }: CategoryIconProps) {
             `}>
                 <Image
                     fill
-                    src={`/icon_${category.slug}.svg`}
+                    src={category.icon}
                     alt={`Icono ${category.name}`}
                     className="object-contain p-1"
                 />

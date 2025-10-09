@@ -11,9 +11,13 @@ async function main(){
         await prisma.category.createMany({
             data: categories
         })
-        await prisma.product.createMany({
-            data: products
-        })
+
+        // Only seed products if there are any
+        if (products.length > 0) {
+            await prisma.product.createMany({
+                data: products
+            })
+        }
     } catch(error){
         console.log(error)
     }

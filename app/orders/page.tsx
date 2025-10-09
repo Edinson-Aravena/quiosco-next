@@ -17,12 +17,12 @@ export default function OrdersPage() {
 
     if (isLoading) return <p className="text-center">Cargando órdenes...</p>
 
-    if (error) return <p className="text-center text-red-600">Error al cargar las órdenes</p>
+    if (error) return <p className="text-center text-red-600 ">Error al cargar las órdenes...</p>
 
     
     if (data) return (
         <>
-            <h1 className="text-center mt-20 text-6xl font-black">Ordenes Listas</h1>
+            <h1 className="text-center mt-20 text-6xl font-black">Ordenes Listas...</h1>
             <Logo />
 
             {data.length ? (
@@ -35,7 +35,7 @@ export default function OrdersPage() {
                     ))}
 
                 </div>
-            ) : <p className="text-center my-10">No hay ordenes Listas</p>}
+            ) : <p className="text-center my-10">No hay ordenes Listas...</p>}
         </>
     )
 }
