@@ -16,8 +16,11 @@ type AdminRouteProps = {
 
 export default function AdminRoute({link}: AdminRouteProps) {
     const pathname = usePathname();
-    // Verifica si la ruta actual incluye la url del link y comienza con /admin
-    const isActive = pathname === link.url || pathname.startsWith(link.url + '/');
+    
+    // Comparación exacta para evitar que rutas hijas activen el padre
+    // Por ejemplo, /admin/orders/history no debería activar /admin/orders
+    const isActive = pathname === link.url || 
+                     (pathname.startsWith(link.url + '/') && link.url !== '/admin/orders');
 
     return (
         <Link

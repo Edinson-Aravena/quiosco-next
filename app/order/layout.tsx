@@ -15,12 +15,12 @@ export default function RootLayout({
             {/* Contenedor principal con diseño responsive */}
             <div className="flex flex-col lg:flex-row">
                 {/* Barra lateral izquierda con categorías - Responsiva */}
-                <div className="order-1 lg:order-1">
+                <div className="order-1 lg:order-1 flex-shrink-0">
                     <OrderSidebar />
                 </div>
 
                 {/* Sidebars superiores en móvil - Aparecen ANTES del contenido */}
-                <div className="order-2 lg:order-3 flex flex-col lg:flex-row">
+                <div className="order-2 lg:order-3 flex flex-col lg:flex-row flex-shrink-0">
                     {/* Barra lateral con el resumen del pedido */}
                     <OrderSummary />
 
@@ -29,7 +29,7 @@ export default function RootLayout({
                 </div>
 
                 {/* Contenido principal - Aparece DESPUÉS de los sidebars en móvil */}
-                <main className="order-3 lg:order-2 flex-1 lg:h-screen lg:overflow-y-scroll p-3 sm:p-5">
+                <main className="order-3 lg:order-2 flex-1 lg:h-screen lg:overflow-y-scroll p-3 sm:p-4 md:p-5">
                     {children}
                 </main>
             </div>

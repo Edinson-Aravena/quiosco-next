@@ -14,9 +14,8 @@ export default function OrdersPage() {
   })
 
   const handleOrderComplete = async (orderId: number) => {
-    // Actualizar la UI inmediatamente
-    const updatedOrders = data?.filter(order => order.id !== orderId);
-    await mutate(updatedOrders, false);
+    // Recargar los datos desde el servidor
+    await mutate();
   };
 
   if (isLoading) {
@@ -43,50 +42,12 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header con estadísticas */}
+      {/* Header simple */}
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <Heading>Administrar Órdenes</Heading>
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-2xl shadow-md">
-                📋
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-blue-900">{data?.length || 0}</p>
-                <p className="text-sm text-blue-700 font-medium">Órdenes Pendientes</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-2xl shadow-md">
-                💰
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-green-900">
-                  ${data?.reduce((sum, order) => sum + order.total, 0).toFixed(2) || '0.00'}
-                </p>
-                <p className="text-sm text-green-700 font-medium">Total en Órdenes</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-amber-500 rounded-lg flex items-center justify-center text-2xl shadow-md">
-                🍽️
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-amber-900">
-                  {data?.reduce((sum, order) => sum + order.orderProducts.length, 0) || 0}
-                </p>
-                <p className="text-sm text-amber-700 font-medium">Productos Totales</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Heading>Órdenes Pendientes</Heading>
+        <p className="text-gray-600 mt-2">
+          {data?.length ? `${data.length} ${data.length === 1 ? 'orden pendiente' : 'órdenes pendientes'}` : 'No hay órdenes pendientes'}
+        </p>
       </div>
 
       {/* Lista de órdenes */}

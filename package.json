@@ -14,6 +14,8 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@prisma/client": "^6.13.0",
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^3.0.2",
     "next": "^14.2.31",
     "next-cloudinary": "^6.16.0",
     "react": "^18",

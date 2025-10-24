@@ -74,35 +74,35 @@ const OrderSummary = () => {
 
   return (
     // Aside que contiene el resumen del pedido, con estilos responsivos
-    <aside className="w-full lg:w-80 xl:w-96 lg:h-screen lg:overflow-y-scroll bg-gradient-to-b from-amber-50 to-white lg:border-l border-gray-200 shadow-md lg:shadow-none">
+    <aside className="w-full lg:w-64 xl:w-72 2xl:w-80 lg:h-screen lg:overflow-y-scroll bg-gradient-to-b from-amber-50 to-white lg:border-l border-gray-200 shadow-md lg:shadow-none">
       {/* Header con título mejorado - Clickeable en móvil */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-4 sm:p-5 lg:sticky lg:top-0 bg-gradient-to-b from-amber-50 to-transparent z-10 hover:bg-amber-100 lg:hover:bg-transparent transition-colors border-b lg:border-b-0 border-amber-200 cursor-pointer lg:cursor-auto"
+        className="w-full p-3 sm:p-4 lg:p-4 lg:sticky lg:top-0 bg-gradient-to-b from-amber-50 to-transparent z-10 hover:bg-amber-100 lg:hover:bg-transparent transition-colors border-b lg:border-b-0 border-amber-200 cursor-pointer lg:cursor-auto"
       >
-        <div className="flex items-center justify-between gap-2 sm:gap-3 mb-2">
-          <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-center lg:justify-center">
-            <ShoppingCartIcon className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-amber-600" />
-            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl text-center font-black text-gray-800">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2 flex-1 justify-center lg:justify-center">
+            <ShoppingCartIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 lg:h-8 lg:w-8 text-amber-600" />
+            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-center font-black text-gray-800">
               Mi Pedido
             </h1>
           </div>
           {/* Icono de chevron solo visible en móvil */}
           <div className="lg:hidden">
             {isOpen ? (
-              <ChevronUpIcon className="h-6 w-6 text-amber-600" />
+              <ChevronUpIcon className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
             ) : (
-              <ChevronDownIcon className="h-6 w-6 text-amber-600" />
+              <ChevronDownIcon className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
             )}
           </div>
         </div>
         <div className="flex items-center justify-center">
-          <div className="h-1 w-20 bg-amber-500 rounded-full"></div>
+          <div className="h-0.5 sm:h-1 w-16 sm:w-20 bg-amber-500 rounded-full"></div>
         </div>
         {/* Badge con contador de productos y total */}
         {order.length > 0 && (
-          <div className="mt-3 text-center">
-            <span className="inline-block bg-amber-100 text-amber-800 px-4 py-1.5 rounded-full text-sm font-semibold">
+          <div className="mt-2 sm:mt-3 text-center">
+            <span className="inline-block bg-amber-100 text-amber-800 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold">
               {order.length} {order.length === 1 ? 'producto' : 'productos'} • {formatCurrency(total)}
             </span>
           </div>
@@ -110,7 +110,7 @@ const OrderSummary = () => {
       </div>
 
       {/* Contenido del acordeón - Oculto en móvil cuando isOpen es false */}
-      <div className={`${isOpen ? 'block' : 'hidden'} lg:block p-4 sm:p-5 pt-0`}>
+      <div className={`${isOpen ? 'block' : 'hidden'} lg:block p-3 sm:p-4 lg:p-4 pt-0`}>
 
       {/* Si el pedido está vacío, muestra un mensaje */}
       {order.length === 0 ? (

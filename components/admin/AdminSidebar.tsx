@@ -1,8 +1,10 @@
 import Logo from "../ui/Logo"
 import AdminRoute from "./AdminRoute"
+import { logoutAction } from "@/actions/login-action"
 
 const adminNavigation = [
     {url: '/admin/orders', text: 'Órdenes', blank: false, icon: '📋'},
+    {url: '/admin/orders/history', text: 'Historial', blank: false, icon: '📊'},
     {url: '/admin/products', text: 'Productos', blank: false, icon: '🍽️'},
     {url: '/order/cafe', text: 'Ver Quiosco', blank: true, icon: '🏪'},
 ]
@@ -29,9 +31,11 @@ export default function AdminSidebar() {
                         <p className="text-white font-semibold text-lg">Panel Admin</p>
                         <p className="text-slate-400 text-sm">Gestión del sistema</p>
                     </div>
-                    <button className="text-slate-300 text-sm bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded">
-                        Ver Perfil
-                    </button>
+                    <form action={logoutAction}>
+                        <button className="text-slate-300 text-sm bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded transition-colors">
+                            Cerrar Sesión
+                        </button>
+                    </form>
                 </div>
             </div>
 
