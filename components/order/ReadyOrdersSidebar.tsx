@@ -14,6 +14,7 @@ export default function ReadyOrdersSidebar() {
   const fetcher = () => fetch(url).then(res => res.json());
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true); // Estado para expandir/colapsar en desktop
 
   const { data, error, isLoading, mutate } = useSWR<OrderWithProducts[]>(url, fetcher, {
     refreshInterval: 60000,
@@ -67,143 +68,161 @@ export default function ReadyOrdersSidebar() {
   const deliveredOrdersCount = data?.filter(order => order.orderDeliveredAt).length || 0;
 
   return (
-    <aside className="w-full lg:w-64 xl:w-72 2xl:w-80 lg:h-screen lg:overflow-y-scroll bg-gradient-to-b from-green-50 to-white lg:border-l border-gray-200 shadow-md lg:shadow-none">
+    <aside className={`w-full transition-all duration-300 lg:h-screen lg:overflow-y-scroll bg-white lg:border-l border-gray-200 shadow-sm ${
+      (!data || data.length === 0 || !isExpanded) ? 'lg:w-16' : 'lg:w-64 xl:w-72 2xl:w-80'
+    }`}>
+      {/* Header moderno y compacto */}
       <div
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-3 sm:p-4 lg:p-4 lg:sticky lg:top-0 bg-gradient-to-b from-green-50 to-transparent z-10 hover:bg-green-100 lg:hover:bg-transparent transition-colors border-b lg:border-b-0 border-green-200 cursor-pointer lg:cursor-auto"
+        onClick={() => {
+          setIsOpen(!isOpen); // Toggle para móvil
+          setIsExpanded(!isExpanded); // Toggle para desktop
+        }}
+        className={`w-full lg:sticky lg:top-0 bg-gradient-to-r from-green-500 to-emerald-500 cursor-pointer transition-all shadow-sm ${
+          (!data || data.length === 0 || !isExpanded) ? 'lg:py-4 lg:px-2' : 'p-3'
+        }`}
       >
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2 flex-1">
-            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-black text-green-800">
-              Órdenes Listas
-            </h1>
+        {(!data || data.length === 0 || !isExpanded) ? (
+          // Vista compactada - Solo icono vertical en desktop
+          <div className="flex lg:flex-col items-center justify-between lg:justify-center gap-2">
+            <div className="flex items-center gap-2 lg:flex-col">
+              <div className="bg-white bg-opacity-20 rounded-lg p-2">
+                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h1 className="text-sm font-bold text-white lg:hidden">Órdenes</h1>
+              <p className="text-xs text-green-100 lg:hidden">{(!data || data.length === 0) ? 'Vacío' : `${data.length} orden${data.length !== 1 ? 'es' : ''}`}</p>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRefresh();
+                }}
+                disabled={isRefreshing}
+                className="p-1 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 transition-all disabled:opacity-50 lg:mt-2"
+                aria-label="Actualizar"
+              >
+                <ArrowPathIcon className={`h-4 w-4 text-white ${isRefreshing ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
             <div className="lg:hidden">
               {isOpen ? (
-                <ChevronUpIcon className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                <ChevronUpIcon className="h-4 w-4 text-white" />
               ) : (
-                <ChevronDownIcon className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+                <ChevronDownIcon className="h-4 w-4 text-white" />
               )}
             </div>
           </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleRefresh();
-            }}
-            disabled={isRefreshing}
-            className="flex-shrink-0 p-1.5 sm:p-2 rounded-full bg-green-100 hover:bg-green-200 text-green-700 transition-all duration-200 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Actualizar órdenes"
-            title="Actualizar órdenes"
-          >
-            <ArrowPathIcon className={`h-4 w-4 sm:h-5 sm:w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-        <div className="flex items-center justify-center">
-          <div className="h-0.5 sm:h-1 w-16 sm:w-20 bg-green-500 rounded-full"></div>
-        </div>
-        {(readyOrdersCount > 0 || deliveredOrdersCount > 0) && (
-          <div className="mt-2 sm:mt-3 flex gap-2 justify-center flex-wrap">
-            {readyOrdersCount > 0 && (
-              <span className="inline-block bg-green-100 text-green-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-semibold">
-                {readyOrdersCount} {readyOrdersCount === 1 ? 'lista' : 'listas'}
-              </span>
-            )}
-            {deliveredOrdersCount > 0 && (
-              <span className="inline-block bg-blue-100 text-blue-800 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-semibold">
-                {deliveredOrdersCount} {deliveredOrdersCount === 1 ? 'entregada' : 'entregadas'}
-              </span>
-            )}
+        ) : (
+          // Vista expandida - Normal
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-1">
+              <div className="bg-white bg-opacity-20 rounded-lg p-2">
+                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h2 className="text-sm font-bold text-white">Órdenes Listas</h2>
+                {(readyOrdersCount > 0 || deliveredOrdersCount > 0) && (
+                  <p className="text-xs text-green-100">
+                    {readyOrdersCount > 0 && `${readyOrdersCount} lista${readyOrdersCount !== 1 ? 's' : ''}`}
+                    {readyOrdersCount > 0 && deliveredOrdersCount > 0 && ' • '}
+                    {deliveredOrdersCount > 0 && `${deliveredOrdersCount} entregada${deliveredOrdersCount !== 1 ? 's' : ''}`}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRefresh();
+                }}
+                disabled={isRefreshing}
+                className="p-1 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 transition-all disabled:opacity-50"
+                aria-label="Actualizar"
+              >
+                <ArrowPathIcon className={`h-4 w-4 text-white ${isRefreshing ? 'animate-spin' : ''}`} />
+              </button>
+              <div className="lg:hidden">
+                {isOpen ? (
+                  <ChevronUpIcon className="h-4 w-4 text-white" />
+                ) : (
+                  <ChevronDownIcon className="h-4 w-4 text-white" />
+                )}
+              </div>
+            </div>
           </div>
         )}
-        <p className="text-center text-xs text-gray-500 mt-1.5 sm:mt-2">
-          Actualización automática cada minuto
-        </p>
       </div>
 
-      <div className={`${isOpen ? 'block' : 'hidden'} lg:block p-3 sm:p-4 lg:p-4 pt-0`}>
+      {/* Contenido - Se oculta cuando está colapsado en desktop */}
+      <div className={`${isOpen ? 'block' : 'hidden'} ${!isExpanded ? 'lg:hidden' : 'lg:block'}`}>
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-10">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-            <p className="text-center mt-4 text-gray-600">Cargando órdenes...</p>
+          <div className="flex flex-col items-center justify-center py-6 px-3 lg:hidden">
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-green-500 border-t-transparent"></div>
+            <p className="text-xs text-gray-500 mt-2">Cargando...</p>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-            <p className="text-red-600 font-medium">Error al cargar las órdenes</p>
+          <div className="mx-3 my-2 p-3 bg-red-50 border border-red-200 rounded-lg text-center lg:hidden">
+            <p className="text-red-600 text-xs font-medium">Error al cargar</p>
           </div>
         ) : !data || data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10">
-            <svg className="w-20 h-20 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <p className="text-center text-gray-500 font-medium">No hay órdenes listas</p>
+          <div className="flex flex-col items-center justify-center py-6 px-3 lg:hidden">
+            <div className="bg-gray-100 rounded-xl p-4 mb-3">
+              <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <p className="text-sm text-gray-500 font-medium">Sin órdenes</p>
+            <p className="text-xs text-gray-400 mt-1">No hay órdenes listas</p>
           </div>
         ) : (
-          <div className="space-y-3 sm:space-y-4">
+          <div className="p-3 space-y-2">
             {data.map((order) => {
               const isDelivered = !!order.orderDeliveredAt;
               return (
                 <div
                   key={order.id}
                   onClick={() => handleOrderClick(order.id, isDelivered)}
-                  className={`rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm transition-all duration-300 cursor-pointer ${
+                  className={`rounded-xl p-2.5 border-2 cursor-pointer transition-all hover:shadow-lg ${
                     isDelivered
-                      ? 'bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 hover:shadow-md hover:scale-[1.02]'
-                      : 'bg-white border-2 border-green-200 hover:shadow-md hover:border-green-300 hover:scale-[1.02]'
+                      ? 'bg-blue-50 border-blue-300 hover:border-blue-400'
+                      : 'bg-white border-green-300 hover:border-green-400'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-2 sm:mb-3 pb-2 sm:pb-3 border-b border-opacity-20" style={{ borderColor: isDelivered ? '#93c5fd' : '#86efac' }}>
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className={`rounded-full w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center font-bold text-xs sm:text-sm text-white ${isDelivered ? 'bg-blue-500' : 'bg-green-500'}`}>
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold text-white shadow-sm ${isDelivered ? 'bg-blue-500' : 'bg-green-500'}`}>
                         {order.name}
                       </div>
-                      <div>
-                        <p className={`text-xs sm:text-sm font-semibold ${isDelivered ? 'text-blue-700' : 'text-gray-700'}`}>Mesa {order.name}</p>
-                        <p className={`text-xs ${isDelivered ? 'text-blue-600' : 'text-gray-500'}`}>
-                          {order.orderProducts.length} {order.orderProducts.length === 1 ? 'producto' : 'productos'}
-                        </p>
-                      </div>
+                      <span className="text-sm font-bold text-gray-900">Mesa {order.name}</span>
                     </div>
-                    <div className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-bold ${isDelivered ? 'bg-blue-200 text-blue-800' : 'bg-green-100 text-green-700'}`}>
-                      {isDelivered ? 'ENTREGADA' : 'LISTA'}
-                    </div>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${isDelivered ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                      {isDelivered ? 'Entregada' : 'Lista'}
+                    </span>
                   </div>
-                  <ul className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3">
+
+                  {/* Items */}
+                  <div className="space-y-1 mb-2">
                     {order.orderProducts.map((item) => (
-                      <li key={item.id} className="flex justify-between items-start text-xs sm:text-sm">
-                        <div className="flex-1">
-                          <span className={`inline-block rounded-full px-1.5 sm:px-2 py-0.5 text-xs font-bold mr-1.5 sm:mr-2 ${isDelivered ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
-                            {item.quantity}x
+                      <div key={item.id} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                          <span className={`w-5 h-5 rounded flex items-center justify-center text-xs font-bold flex-shrink-0 ${isDelivered ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                            {item.quantity}
                           </span>
-                          <span className={isDelivered ? 'text-blue-700' : 'text-gray-700'}>{item.product.name}</span>
+                          <span className="text-gray-700 truncate">{item.product.name}</span>
                         </div>
-                        <span className={`font-medium ml-2 text-xs sm:text-sm ${isDelivered ? 'text-blue-600' : 'text-gray-600'}`}>
-                          {formatCurrency(item.product.price * item.quantity)}
-                        </span>
-                      </li>
+                        <span className="text-gray-600 font-medium ml-1">{formatCurrency(item.product.price * item.quantity)}</span>
+                      </div>
                     ))}
-                  </ul>
-                  <div className="pt-2 sm:pt-3 border-t border-opacity-20" style={{ borderColor: isDelivered ? '#93c5fd' : '#86efac' }}>
-                    <div className="flex justify-between items-center">
-                      <span className={`text-xs sm:text-sm font-semibold ${isDelivered ? 'text-blue-700' : 'text-gray-700'}`}>Total:</span>
-                      <span className={`text-base sm:text-lg font-bold ${isDelivered ? 'text-blue-700' : 'text-green-700'}`}>{formatCurrency(order.total)}</span>
-                    </div>
                   </div>
-                  <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-opacity-20" style={{ borderColor: isDelivered ? '#93c5fd' : '#86efac' }}>
-                    {isDelivered ? (
-                      <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        <p className="text-xs text-center text-blue-600 font-medium italic">Click para quitar del panel</p>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <p className="text-xs text-center text-gray-500 italic">Click para marcar como entregada</p>
-                      </div>
-                    )}
+
+                  {/* Total */}
+                  <div className="pt-2 border-t border-gray-200 flex justify-between items-center">
+                    <span className="text-xs font-bold text-gray-700">Total</span>
+                    <span className={`text-base font-bold ${isDelivered ? 'text-blue-600' : 'text-green-600'}`}>{formatCurrency(order.total)}</span>
                   </div>
                 </div>
               );
