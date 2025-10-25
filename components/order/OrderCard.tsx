@@ -6,7 +6,7 @@ import { toast } from "react-toastify"
 
 interface OrderCardProps {
   order: OrderWithProducts;
-  onComplete: (orderId: number) => Promise<void>;
+  onComplete?: (orderId: number) => Promise<void>;
 }
 
 export default function OrderCard({ order, onComplete }: OrderCardProps) {
@@ -19,7 +19,7 @@ export default function OrderCard({ order, onComplete }: OrderCardProps) {
         const result = await startOrderAction(order.id);
         if (result.success) {
           toast.success("Orden en preparación");
-          await onComplete(order.id); // Esto forzará la actualización
+          if (onComplete) await onComplete(order.id); // Esto forzará la actualización
         } else {
           toast.error(result.error || "Error al iniciar la orden");
         }
@@ -32,7 +32,7 @@ export default function OrderCard({ order, onComplete }: OrderCardProps) {
         const formData = new FormData();
         formData.append('order_id', order.id.toString());
         await completeOrder(formData);
-        await onComplete(order.id);
+        if (onComplete) await onComplete(order.id);
         toast.success("Orden completada");
       } catch (error) {
         toast.error("Error al completar la orden");

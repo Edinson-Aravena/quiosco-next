@@ -50,12 +50,14 @@ model User {
   id       Int      @id @default(autoincrement())
   username String   @unique
   password String
-  role     UserRole @default(CUSTOMER)
+  role     UserRole @default(WAITER)
+  name     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 enum UserRole {
   ADMIN
-  CUSTOMER
+  CHEF
+  WAITER
 }

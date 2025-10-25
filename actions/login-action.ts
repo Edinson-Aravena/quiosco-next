@@ -44,9 +44,24 @@ export async function loginAction(prevState: State, formData: FormData): Promise
             }
         }
 
-        // Crear cookie de sesión simple
+        // Crear cookies de sesión
         const cookieStore = await cookies()
+        
+        // Cookie con ID (httpOnly para seguridad)
         cookieStore.set('userId', user.id.toString(), {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 7 // 1 semana
+        })
+
+        // Cookie con datos del usuario para el middleware (incluye rol)
+        cookieStore.set('user', JSON.stringify({
+            id: user.id,
+            username: user.username,
+            name: user.name,
+            role: user.role
+        }), {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
@@ -55,7 +70,11 @@ export async function loginAction(prevState: State, formData: FormData): Promise
 
         // Redirigir según el rol
         if (user.role === 'ADMIN') {
-            redirect('/admin/products')
+            redirect('/admin/dashboard')
+        } else if (user.role === 'CHEF') {
+            redirect('/chef')
+        } else if (user.role === 'WAITER') {
+            redirect('/order/cafe')
         } else {
             redirect('/order/cafe')
         }
@@ -77,30 +96,20 @@ export async function loginAction(prevState: State, formData: FormData): Promise
 export async function logoutAction() {
     const cookieStore = await cookies()
     cookieStore.delete('userId')
+    cookieStore.delete('user')
     redirect('/')
 }
 
 export async function getCurrentUser() {
     try {
         const cookieStore = await cookies()
-        const userId = cookieStore.get('userId')?.value
+        const userCookie = cookieStore.get('user')?.value
 
-        if (!userId) {
+        if (!userCookie) {
             return null
         }
 
-        const user = await prisma.user.findUnique({
-            where: {
-                id: parseInt(userId)
-            },
-            select: {
-                id: true,
-                username: true,
-                role: true
-            }
-        })
-
-        return user
+        return JSON.parse(userCookie)
     } catch (error) {
         return null
     }
