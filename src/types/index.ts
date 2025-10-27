@@ -1,6 +1,9 @@
 import { Order, Product,OrderProducts } from "@prisma/client";
 
-export type OrderItem = Pick<Product, 'id' | 'name' | 'price' > & {
+export type OrderItem = {
+    id: number;
+    name: string;
+    price: number;
     quantity: number;
     subtotal: number;
 }

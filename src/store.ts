@@ -6,9 +6,9 @@ import { Product } from '@prisma/client';
 interface Store {
     order: OrderItem[]; // Array de productos en el pedido
     addToOrder: (product : Product) => void; // Agrega un producto al pedido
-    increaseQuantity : (id: Product['id']) => void; // Aumenta la cantidad de un producto
-    decreaseQuantity : (id: Product['id']) => void; // Disminuye la cantidad de un producto
-    removeItem: (id:Product['id']) => void; // Elimina un producto del pedido
+    increaseQuantity : (id: number) => void; // Aumenta la cantidad de un producto
+    decreaseQuantity : (id: number) => void; // Disminuye la cantidad de un producto
+    removeItem: (id: number) => void; // Elimina un producto del pedido
     clearOrder: () => void; // Limpia el pedido
 }
 
@@ -19,20 +19,26 @@ export const useStore = create <Store>((set, get) => ({
     // Agrega un producto al pedido o aumenta su cantidad si ya existe
     addToOrder:(product) => {
         const {categoryId, image, ...data} = product
+        // Convertir BigInt y Decimal a Number
+        const productId = typeof product.id === 'bigint' ? Number(product.id) : product.id
+        const productPrice = typeof product.price === 'object' ? Number(product.price) : product.price
+        
         let order : OrderItem[] = []
         // Si el producto ya está en el pedido, aumenta su cantidad
-        if(get().order.find(item => item.id === product.id)) {
-            order = get().order.map(item => item.id === product.id ? {
+        if(get().order.find(item => item.id === productId)) {
+            order = get().order.map(item => item.id === productId ? {
                 ...item,
                 quantity: item.quantity + 1,
-                subtotal: (item.quantity + 1) * product.price,
+                subtotal: (item.quantity + 1) * item.price,
             } : item )
         } else {
             // Si es nuevo, lo agrega con cantidad 1
             order = [...get().order,{
-                ...data,
+                id: productId,
+                name: product.name,
+                price: productPrice,
                 quantity: 1,
-                subtotal: 1 * product.price,
+                subtotal: 1 * productPrice,
             }]
         }
         set(() => ({

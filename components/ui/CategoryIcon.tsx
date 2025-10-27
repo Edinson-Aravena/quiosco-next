@@ -8,6 +8,19 @@ type CategoryIconProps = {
     category: Category
 }
 
+// Función para obtener el emoji según el slug de la categoría
+function getCategoryIcon(slug: string): string {
+    const icons: Record<string, string> = {
+        'cafe': '☕',
+        'desayuno': '🥐',
+        'comida': '🍽️',
+        'postres': '🍰',
+        'bebidas': '🥤',
+        'entradas': '🍟'
+    }
+    return icons[slug] || '🍴'
+}
+
 export default function CategoryIcon({ category }: CategoryIconProps) {
 
     const params = useParams<{category : string}>();
@@ -48,13 +61,11 @@ export default function CategoryIcon({ category }: CategoryIconProps) {
                 ${isActive ? 'bg-white/20' : 'bg-gradient-to-br from-amber-100 to-orange-100 group-hover:from-amber-200 group-hover:to-orange-200'}
                 transition-all duration-300
                 group-hover:rotate-6
+                flex items-center justify-center
             `}>
-                <Image
-                    fill
-                    src={category.icon}
-                    alt={`Icono ${category.name}`}
-                    className="object-contain p-1"
-                />
+                <span className="text-2xl lg:text-3xl">
+                    {getCategoryIcon(category.slug || '')}
+                </span>
             </div>
 
             {/* Nombre de la categoría */}

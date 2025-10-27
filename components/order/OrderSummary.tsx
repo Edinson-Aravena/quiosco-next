@@ -38,32 +38,45 @@ const OrderSummary = () => {
   // Maneja el envío del formulario y la validación de datos
   const handleCreateOrder = async (formData: FormData) => {
     // Extrae el nombre del cliente del formulario
+    console.log('Order from store:', order);
+    
     const data = {
       name: formData.get('name'),
       total,
-      order
+      order: order.map(item => ({
+        id: typeof item.id === 'bigint' ? Number(item.id) : Number(item.id),
+        name: String(item.name),
+        price: typeof item.price === 'object' ? Number(item.price) : Number(item.price),
+        quantity: Number(item.quantity),
+        subtotal: typeof item.subtotal === 'object' ? Number(item.subtotal) : Number(item.subtotal)
+      }))
     }
+    
+    console.log('Data to validate:', data);
 
     // Valida los datos del formulario usando Zod Schema
     const result = OrderSchema.safeParse(data)
-    console.log(result);
+    console.log('Validation result:', result);
+    
     // Si hay errores de validación, muestra los mensajes de error
     if(!result.success) {
       result.error.issues.forEach((issue) => {
         toast.error(issue.message)
       })
-
+      return; // Detener la ejecución si hay errores
     }
-
 
     // Si la validación es exitosa, crea la orden
     const response = await createOrder(data)
+    
     if(response?.errors) {
       response.errors.forEach((issue) => {
-        toast.error(issue.message);})
+        toast.error(issue.message);
+      })
+      return; // Detener si hay errores del servidor
     }
 
-
+    // Solo mostrar éxito si todo salió bien
     toast.success('Pedido Realizado Correctamente');
     clearOrder();
   }

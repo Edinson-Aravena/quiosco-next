@@ -38,5 +38,21 @@ export async function GET(){
             }
         }
     })
-    return Response.json(orders)
+    
+    // Convertir BigInt y Decimal a tipos serializables
+    const serializedOrders = orders.map(order => ({
+        ...order,
+        orderProducts: order.orderProducts.map(op => ({
+            ...op,
+            productId: Number(op.productId),
+            product: {
+                ...op.product,
+                id: Number(op.product.id),
+                price: Number(op.product.price),
+                categoryId: Number(op.product.categoryId)
+            }
+        }))
+    }))
+    
+    return Response.json(serializedOrders)
 }

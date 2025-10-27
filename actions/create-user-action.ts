@@ -1,19 +1,18 @@
 "use server";
 
-import { prisma } from "@/src/lib/prisma";
 import { revalidatePath } from "next/cache";
-import bcrypt from "bcryptjs";
-import { UserRole } from "@prisma/client";
+import { createUserApi } from "@/src/lib/api";
 
 export async function createUserAction(formData: FormData) {
   try {
     const username = formData.get('username') as string;
     const password = formData.get('password') as string;
     const name = formData.get('name') as string;
-    const role = formData.get('role') as UserRole;
+    const email = formData.get('email') as string;
+    const role = formData.get('role') as string;
 
     // Validaciones
-    if (!username || !password || !role) {
+    if (!username || !password || !role || !name) {
       return {
         success: false,
         error: 'Todos los campos son requeridos'
@@ -27,30 +26,21 @@ export async function createUserAction(formData: FormData) {
       };
     }
 
-    // Verificar si el usuario ya existe
-    const existingUser = await prisma.user.findUnique({
-      where: { username }
+    // Llamar a la API del backend para crear el usuario
+    const response = await createUserApi({
+      username,
+      email,
+      name,
+      password,
+      role
     });
 
-    if (existingUser) {
+    if (!response.success) {
       return {
         success: false,
-        error: 'El nombre de usuario ya existe'
+        error: response.message || 'Error al crear el usuario'
       };
     }
-
-    // Hash de la contraseña
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Crear el usuario
-    await prisma.user.create({
-      data: {
-        username,
-        password: hashedPassword,
-        name: name || null,
-        role
-      }
-    });
 
     revalidatePath('/admin/users');
     

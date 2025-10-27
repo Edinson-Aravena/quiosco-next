@@ -1,9 +1,8 @@
 'use server'
 
-import { prisma } from "@/src/lib/prisma"
-import bcrypt from "bcryptjs"
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import { loginApi } from "@/src/lib/api"
 
 type State = {
     error?: string
@@ -22,27 +21,16 @@ export async function loginAction(prevState: State, formData: FormData): Promise
     }
 
     try {
-        // Buscar usuario en la base de datos
-        const user = await prisma.user.findUnique({
-            where: {
-                username: username
-            }
-        })
+        // Llamar a la API del backend
+        const response = await loginApi({ username, password })
 
-        if (!user) {
+        if (!response.success || !response.data) {
             return {
-                error: 'Usuario no encontrado'
+                error: response.message || 'Error al iniciar sesión'
             }
         }
 
-        // Verificar contraseña
-        const isValidPassword = await bcrypt.compare(password, user.password)
-
-        if (!isValidPassword) {
-            return {
-                error: 'Contraseña incorrecta'
-            }
-        }
+        const user = response.data
 
         // Crear cookies de sesión
         const cookieStore = await cookies()
@@ -55,12 +43,22 @@ export async function loginAction(prevState: State, formData: FormData): Promise
             maxAge: 60 * 60 * 24 * 7 // 1 semana
         })
 
+        // Cookie con token de sesión
+        cookieStore.set('session_token', user.session_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 * 7 // 1 semana
+        })
+
         // Cookie con datos del usuario para el middleware (incluye rol)
         cookieStore.set('user', JSON.stringify({
             id: user.id,
             username: user.username,
             name: user.name,
-            role: user.role
+            email: user.email,
+            role: user.role,
+            roles: user.roles
         }), {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
@@ -75,6 +73,12 @@ export async function loginAction(prevState: State, formData: FormData): Promise
             redirect('/chef')
         } else if (user.role === 'WAITER') {
             redirect('/order/cafe')
+        } else if (user.role === 'RESTAURANTE') {
+            redirect('/admin/dashboard')
+        } else if (user.role === 'REPARTIDOR') {
+            redirect('/orders')
+        } else if (user.role === 'CLIENTE') {
+            redirect('/orders')
         } else {
             redirect('/order/cafe')
         }
@@ -97,6 +101,7 @@ export async function logoutAction() {
     const cookieStore = await cookies()
     cookieStore.delete('userId')
     cookieStore.delete('user')
+    cookieStore.delete('session_token')
     redirect('/')
 }
 
