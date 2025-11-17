@@ -4,7 +4,8 @@ import { logoutAction } from "@/actions/login-action"
 
 const adminNavigation = [
     {url: '/admin/dashboard', text: 'Dashboard', blank: false, icon: '📈'},
-    {url: '/admin/orders', text: 'Órdenes', blank: false, icon: '📋'},
+    {url: '/admin/orders', text: 'Órdenes Quiosco', blank: false, icon: '📋'},
+    {url: '/admin/orders/delivery', text: 'Órdenes Delivery', blank: false, icon: '🛵'},
     {url: '/admin/orders/history', text: 'Historial', blank: false, icon: '📊'},
     {url: '/admin/products', text: 'Productos', blank: false, icon: '🍽️'},
     {url: '/admin/users', text: 'Usuarios', blank: false, icon: '👥'},

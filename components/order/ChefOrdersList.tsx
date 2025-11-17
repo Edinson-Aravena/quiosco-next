@@ -1,16 +1,26 @@
 "use client";
 
-import { OrderWithProducts } from "@/src/types";
-import OrderCard from "./OrderCard";
+import { ChefOrder } from "@/actions/get-chef-orders-action";
+import ChefOrderCard from "./ChefOrderCard";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 type ChefOrdersListProps = {
-  pendingOrders: OrderWithProducts[];
-  inProgressOrders: OrderWithProducts[];
+  pendingOrders: ChefOrder[];
+  inProgressOrders: ChefOrder[];
 };
 
 export default function ChefOrdersList({ pendingOrders, inProgressOrders }: ChefOrdersListProps) {
   const router = useRouter();
+
+  // Auto-refresh cada 5 segundos para mostrar nuevas órdenes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      router.refresh();
+    }, 5000); // 5 segundos
+
+    return () => clearInterval(interval);
+  }, [router]);
 
   const handleOrderComplete = async () => {
     // Refrescar la página para obtener los datos actualizados
@@ -30,7 +40,7 @@ export default function ChefOrdersList({ pendingOrders, inProgressOrders }: Chef
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {pendingOrders.map(order => (
-              <OrderCard key={order.id} order={order} onComplete={handleOrderComplete} />
+              <ChefOrderCard key={order.orderId} order={order} onComplete={handleOrderComplete} />
             ))}
           </div>
         </div>
@@ -47,7 +57,7 @@ export default function ChefOrdersList({ pendingOrders, inProgressOrders }: Chef
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {inProgressOrders.map(order => (
-              <OrderCard key={order.id} order={order} onComplete={handleOrderComplete} />
+              <ChefOrderCard key={order.orderId} order={order} onComplete={handleOrderComplete} />
             ))}
           </div>
         </div>

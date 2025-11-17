@@ -12,15 +12,16 @@ export default function CreateUserForm() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
+    // Guardar referencia del formulario ANTES de operaciones asíncronas
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const result = await createUserAction(formData);
 
     if (result.success) {
       toast.success(result.message);
-      setIsOpen(false);
-      // Reset form
-      const form = e.currentTarget;
+      // Reset form before closing
       form.reset();
+      setIsOpen(false);
     } else {
       toast.error(result.error);
     }
@@ -83,6 +84,30 @@ export default function CreateUserForm() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="usuario@ejemplo.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Teléfono
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  placeholder="+56 9 1234 5678"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
                   Contraseña *
                 </label>
                 <input
@@ -105,9 +130,11 @@ export default function CreateUserForm() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 >
                   <option value="">Seleccionar rol...</option>
-                  <option value="WAITER">Garzón - Solo Quiosco</option>
-                  <option value="CHEF">Chef - Solo Órdenes</option>
-                  <option value="ADMIN">Administrador - Acceso Total</option>
+                  <option value="WAITER">🍽️ Garzón - Quiosco</option>
+                  <option value="CHEF">👨‍🍳 Chef - Órdenes</option>
+                  <option value="REPARTIDOR">🛵 Repartidor - Entregas</option>
+                  <option value="CLIENTE">👤 Cliente - App Móvil</option>
+                  <option value="ADMIN">👑 Administrador - Acceso Total</option>
                 </select>
               </div>
 

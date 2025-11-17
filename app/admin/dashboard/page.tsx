@@ -22,8 +22,13 @@ async function getDashboardStats() {
   const startOfYear = new Date(now.getFullYear(), 0, 1);
 
   // Ganancias por período (solo órdenes entregadas)
-  const [dailyRevenue, weeklyRevenue, monthlyRevenue, yearlyRevenue, totalOrders, totalProducts, avgOrderValue, topProducts] = await Promise.all([
-    // Ganancias del día
+  const [dailyRevenue, weeklyRevenue, monthlyRevenue, yearlyRevenue, totalOrders, totalProducts, avgOrderValue, topProducts, 
+    // Ventas QUIOSCO (Local)
+    dailyQuiosco, weeklyQuiosco, monthlyQuiosco, yearlyQuiosco, totalQuiosco,
+    // Ventas DELIVERY (App Móvil) 
+    dailyDelivery, weeklyDelivery, monthlyDelivery, yearlyDelivery, totalDelivery
+  ] = await Promise.all([
+    // Ganancias del día (TOTAL)
     prisma.order.aggregate({
       _sum: { total: true },
       where: {
@@ -31,7 +36,7 @@ async function getDashboardStats() {
         orderDeliveredAt: { not: null }
       }
     }),
-    // Ganancias de la semana
+    // Ganancias de la semana (TOTAL)
     prisma.order.aggregate({
       _sum: { total: true },
       where: {
@@ -39,7 +44,7 @@ async function getDashboardStats() {
         orderDeliveredAt: { not: null }
       }
     }),
-    // Ganancias del mes
+    // Ganancias del mes (TOTAL)
     prisma.order.aggregate({
       _sum: { total: true },
       where: {
@@ -47,7 +52,7 @@ async function getDashboardStats() {
         orderDeliveredAt: { not: null }
       }
     }),
-    // Ganancias del año
+    // Ganancias del año (TOTAL)
     prisma.order.aggregate({
       _sum: { total: true },
       where: {
@@ -66,7 +71,7 @@ async function getDashboardStats() {
       _avg: { total: true },
       where: { orderDeliveredAt: { not: null } }
     }),
-    // Productos más vendidos
+    // Productos más vendidos (ambos sistemas)
     prisma.orderProducts.groupBy({
       by: ['productId'],
       _sum: {
@@ -78,8 +83,125 @@ async function getDashboardStats() {
         }
       },
       take: 5
-    })
+    }),
+    
+    // ========== VENTAS QUIOSCO (LOCAL) ==========
+    // Día
+    prisma.order.aggregate({
+      _sum: { total: true },
+      where: {
+        date: { gte: startOfDay },
+        orderDeliveredAt: { not: null }
+      }
+    }),
+    // Semana
+    prisma.order.aggregate({
+      _sum: { total: true },
+      where: {
+        date: { gte: startOfWeek },
+        orderDeliveredAt: { not: null }
+      }
+    }),
+    // Mes
+    prisma.order.aggregate({
+      _sum: { total: true },
+      where: {
+        date: { gte: startOfMonth },
+        orderDeliveredAt: { not: null }
+      }
+    }),
+    // Año
+    prisma.order.aggregate({
+      _sum: { total: true },
+      where: {
+        date: { gte: startOfYear },
+        orderDeliveredAt: { not: null }
+      }
+    }),
+    // Total órdenes quiosco
+    prisma.order.count({
+      where: { orderDeliveredAt: { not: null } }
+    }),
+    
+    // ========== VENTAS DELIVERY (APP MÓVIL) ==========
+    // Día
+    prisma.deliveryOrder.findMany({
+      where: {
+        createdAt: { gte: startOfDay },
+        status: 'ENTREGADO'
+      },
+      include: {
+        orderProducts: {
+          include: {
+            product: true
+          }
+        }
+      }
+    }),
+    // Semana
+    prisma.deliveryOrder.findMany({
+      where: {
+        createdAt: { gte: startOfWeek },
+        status: 'ENTREGADO'
+      },
+      include: {
+        orderProducts: {
+          include: {
+            product: true
+          }
+        }
+      }
+    }),
+    // Mes
+    prisma.deliveryOrder.findMany({
+      where: {
+        createdAt: { gte: startOfMonth },
+        status: 'ENTREGADO'
+      },
+      include: {
+        orderProducts: {
+          include: {
+            product: true
+          }
+        }
+      }
+    }),
+    // Año
+    prisma.deliveryOrder.findMany({
+      where: {
+        createdAt: { gte: startOfYear },
+        status: 'ENTREGADO'
+      },
+      include: {
+        orderProducts: {
+          include: {
+            product: true
+          }
+        }
+      }
+    }),
+    // Total órdenes delivery
+    prisma.deliveryOrder.count({
+      where: { status: 'ENTREGADO' }
+    }),
   ]);
+
+  // Calcular totales de delivery
+  const calculateDeliveryTotal = (orders: any[]) => {
+    return orders.reduce((sum, order) => {
+      const orderTotal = order.orderProducts.reduce((total: number, op: any) => {
+        return total + (Number(op.quantity) * Number(op.product.price));
+      }, 0);
+      return sum + orderTotal;
+    }, 0);
+  };
+
+  const deliveryRevenue = {
+    daily: calculateDeliveryTotal(dailyDelivery),
+    weekly: calculateDeliveryTotal(weeklyDelivery),
+    monthly: calculateDeliveryTotal(monthlyDelivery),
+    yearly: calculateDeliveryTotal(yearlyDelivery),
+  };
 
   // Obtener detalles de los productos más vendidos
   const productIds = topProducts.map(p => p.productId);
@@ -96,19 +218,36 @@ async function getDashboardStats() {
     };
   });
 
-  // Órdenes recientes
-  const recentOrders = await prisma.order.findMany({
-    take: 5,
-    orderBy: { date: 'desc' },
-    where: { orderDeliveredAt: { not: null } },
-    include: {
-      orderProducts: {
-        include: {
-          product: true
+  // Órdenes recientes (ambos sistemas)
+  const [recentQuioscoOrders, recentDeliveryOrders] = await Promise.all([
+    // Quiosco
+    prisma.order.findMany({
+      take: 5,
+      orderBy: { date: 'desc' },
+      where: { orderDeliveredAt: { not: null } },
+      include: {
+        orderProducts: {
+          include: {
+            product: true
+          }
         }
       }
-    }
-  });
+    }),
+    // Delivery
+    prisma.deliveryOrder.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      where: { status: 'ENTREGADO' },
+      include: {
+        client: true,
+        orderProducts: {
+          include: {
+            product: true
+          }
+        }
+      }
+    })
+  ]);
 
   return {
     revenue: {
@@ -117,11 +256,23 @@ async function getDashboardStats() {
       monthly: monthlyRevenue._sum.total || 0,
       yearly: yearlyRevenue._sum.total || 0,
     },
-    totalOrders,
+    quioscoRevenue: {
+      daily: dailyQuiosco._sum.total || 0,
+      weekly: weeklyQuiosco._sum.total || 0,
+      monthly: monthlyQuiosco._sum.total || 0,
+      yearly: yearlyQuiosco._sum.total || 0,
+    },
+    deliveryRevenue,
+    totalOrders: totalOrders + totalDelivery,
+    totalQuioscoOrders: totalQuiosco,
+    totalDeliveryOrders: totalDelivery,
     totalProducts,
     avgOrderValue: avgOrderValue._avg.total || 0,
     topProducts: topProductsWithDetails,
-    recentOrders
+    recentOrders: {
+      quiosco: recentQuioscoOrders,
+      delivery: recentDeliveryOrders
+    }
   };
 }
 
@@ -149,7 +300,7 @@ export default async function DashboardPage() {
         <p className="text-gray-600 mt-2">Resumen general del negocio</p>
       </div>
 
-      {/* Tarjetas de Ganancias */}
+      {/* Tarjetas de Ganancias TOTALES */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Ganancias Diarias */}
         <div className="bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
@@ -159,8 +310,12 @@ export default async function DashboardPage() {
               HOY
             </div>
           </div>
-          <p className="text-green-100 text-sm font-semibold mb-1">Ganancias Diarias</p>
-          <p className="text-3xl font-bold">{formatCurrency(stats.revenue.daily)}</p>
+          <p className="text-green-100 text-sm font-semibold mb-1">Ganancias Diarias TOTALES</p>
+          <p className="text-3xl font-bold">{formatCurrency(stats.revenue.daily + stats.deliveryRevenue.daily)}</p>
+          <div className="mt-2 pt-2 border-t border-white/20 flex justify-between text-xs">
+            <span>Local: {formatCurrency(stats.quioscoRevenue.daily)}</span>
+            <span>App: {formatCurrency(stats.deliveryRevenue.daily)}</span>
+          </div>
         </div>
 
         {/* Ganancias Semanales */}
@@ -171,8 +326,12 @@ export default async function DashboardPage() {
               SEMANA
             </div>
           </div>
-          <p className="text-blue-100 text-sm font-semibold mb-1">Ganancias Semanales</p>
-          <p className="text-3xl font-bold">{formatCurrency(stats.revenue.weekly)}</p>
+          <p className="text-blue-100 text-sm font-semibold mb-1">Ganancias Semanales TOTALES</p>
+          <p className="text-3xl font-bold">{formatCurrency(stats.revenue.weekly + stats.deliveryRevenue.weekly)}</p>
+          <div className="mt-2 pt-2 border-t border-white/20 flex justify-between text-xs">
+            <span>Local: {formatCurrency(stats.quioscoRevenue.weekly)}</span>
+            <span>App: {formatCurrency(stats.deliveryRevenue.weekly)}</span>
+          </div>
         </div>
 
         {/* Ganancias Mensuales */}
@@ -183,8 +342,12 @@ export default async function DashboardPage() {
               MES
             </div>
           </div>
-          <p className="text-purple-100 text-sm font-semibold mb-1">Ganancias Mensuales</p>
-          <p className="text-3xl font-bold">{formatCurrency(stats.revenue.monthly)}</p>
+          <p className="text-purple-100 text-sm font-semibold mb-1">Ganancias Mensuales TOTALES</p>
+          <p className="text-3xl font-bold">{formatCurrency(stats.revenue.monthly + stats.deliveryRevenue.monthly)}</p>
+          <div className="mt-2 pt-2 border-t border-white/20 flex justify-between text-xs">
+            <span>Local: {formatCurrency(stats.quioscoRevenue.monthly)}</span>
+            <span>App: {formatCurrency(stats.deliveryRevenue.monthly)}</span>
+          </div>
         </div>
 
         {/* Ganancias Anuales */}
@@ -195,8 +358,87 @@ export default async function DashboardPage() {
               AÑO
             </div>
           </div>
-          <p className="text-amber-100 text-sm font-semibold mb-1">Ganancias Anuales</p>
-          <p className="text-3xl font-bold">{formatCurrency(stats.revenue.yearly)}</p>
+          <p className="text-amber-100 text-sm font-semibold mb-1">Ganancias Anuales TOTALES</p>
+          <p className="text-3xl font-bold">{formatCurrency(stats.revenue.yearly + stats.deliveryRevenue.yearly)}</p>
+          <div className="mt-2 pt-2 border-t border-white/20 flex justify-between text-xs">
+            <span>Local: {formatCurrency(stats.quioscoRevenue.yearly)}</span>
+            <span>App: {formatCurrency(stats.deliveryRevenue.yearly)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Comparativa Quiosco vs Delivery */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Ventas QUIOSCO (Local) */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-orange-500 to-red-500 px-6 py-4">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <span>🏪</span>
+              Ventas en el Local (Quiosco)
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-orange-50 p-4 rounded-lg">
+                <p className="text-xs text-orange-600 font-semibold mb-1">HOY</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.quioscoRevenue.daily)}</p>
+              </div>
+              <div className="bg-orange-50 p-4 rounded-lg">
+                <p className="text-xs text-orange-600 font-semibold mb-1">SEMANA</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.quioscoRevenue.weekly)}</p>
+              </div>
+              <div className="bg-orange-50 p-4 rounded-lg">
+                <p className="text-xs text-orange-600 font-semibold mb-1">MES</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.quioscoRevenue.monthly)}</p>
+              </div>
+              <div className="bg-orange-50 p-4 rounded-lg">
+                <p className="text-xs text-orange-600 font-semibold mb-1">AÑO</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.quioscoRevenue.yearly)}</p>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600 text-sm">Total de órdenes</span>
+                <span className="text-2xl font-bold text-orange-600">{stats.totalQuioscoOrders}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Ventas DELIVERY (App Móvil) */}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <span>📱</span>
+              Ventas en App Móvil (Delivery)
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-xs text-blue-600 font-semibold mb-1">HOY</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.deliveryRevenue.daily)}</p>
+              </div>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-xs text-blue-600 font-semibold mb-1">SEMANA</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.deliveryRevenue.weekly)}</p>
+              </div>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-xs text-blue-600 font-semibold mb-1">MES</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.deliveryRevenue.monthly)}</p>
+              </div>
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-xs text-blue-600 font-semibold mb-1">AÑO</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.deliveryRevenue.yearly)}</p>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600 text-sm">Total de órdenes</span>
+                <span className="text-2xl font-bold text-blue-600">{stats.totalDeliveryOrders}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -295,28 +537,59 @@ export default async function DashboardPage() {
             </Link>
           </div>
           <div className="p-6">
-            <div className="space-y-4">
-              {stats.recentOrders.map((order: any) => (
-                <div key={order.id} className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold text-gray-600 mb-3">🏪 Local (Quiosco)</h3>
+            <div className="space-y-3 mb-6">
+              {stats.recentOrders.quiosco.slice(0, 3).map((order: any) => (
+                <div key={`q-${order.id}`} className="p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors border border-orange-200">
+                  <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      <div className="w-7 h-7 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
                         {order.name}
                       </div>
-                      <span className="font-semibold text-gray-900">Mesa {order.name}</span>
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-semibold">
+                      <span className="font-semibold text-gray-900 text-sm">Mesa {order.name}</span>
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">
                         Entregada
                       </span>
                     </div>
-                    <span className="text-lg font-bold text-gray-900">
+                    <span className="text-base font-bold text-gray-900">
                       {formatCurrency(order.total)}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-600">
                     {formatDate(order.date)} • {order.orderProducts.length} productos
                   </div>
                 </div>
               ))}
+            </div>
+
+            <h3 className="text-sm font-bold text-gray-600 mb-3">📱 App Móvil (Delivery)</h3>
+            <div className="space-y-3">
+              {stats.recentOrders.delivery.slice(0, 3).map((order: any) => {
+                const total = order.orderProducts.reduce((sum: number, op: any) => 
+                  sum + (Number(op.quantity) * Number(op.product.price)), 0
+                );
+                return (
+                  <div key={`d-${order.id}`} className="p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors border border-blue-200">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                          {order.client.name.charAt(0)}
+                        </div>
+                        <span className="font-semibold text-gray-900 text-sm">{order.client.name}</span>
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">
+                          Entregado
+                        </span>
+                      </div>
+                      <span className="text-base font-bold text-gray-900">
+                        {formatCurrency(total)}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {formatDate(new Date(Number(order.timestamp)))} • {order.orderProducts.length} productos
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

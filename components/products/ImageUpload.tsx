@@ -16,20 +16,13 @@ export default function ImageUpload({image} : {image: string | undefined}) {
         <CldUploadWidget
             onSuccess={(result, {widget}) =>{
                 if(result.event === 'success'){
-                    widget.close()
+                    widget?.close()
                     //@ts-ignore
                     setImageUrl(result.info?.secure_url)
                 }
             }}
             uploadPreset="quiosco"
             options={{ maxFiles: 1 }}
-            onUpload={(error, result) => {
-                if (error) {
-                    console.error("Error uploading image:", error);
-                } else {
-                    console.log("Image uploaded:", result);
-                }
-            }}
         >
             {({ open }) => (
                 <>
@@ -38,7 +31,7 @@ export default function ImageUpload({image} : {image: string | undefined}) {
                         <div
                             className='relative cursor-pointer hover:opacity-70 transition p-10 border-neutral-300 flex flex-col justify-center items-center gap-4
                                      text-neutral-600 bg-slate-100'
-                                     onClick={()=> open()}
+                                     onClick={()=> open?.()}
                                      
                             >
                             <TbPhotoPlus

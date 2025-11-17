@@ -4,7 +4,7 @@ import { deleteProduct } from "@/actions/delete-product-action"
 import { useRouter } from "next/navigation"
 import { toast } from "react-toastify"
 
-export default function DeleteProductButton({ id, name }: { id: number, name: string }) {
+export default function DeleteProductButton({ id, name }: { id: number | bigint, name: string }) {
     const router = useRouter()
 
     const handleDelete = async () => {

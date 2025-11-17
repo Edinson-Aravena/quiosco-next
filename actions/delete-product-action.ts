@@ -3,8 +3,11 @@
 import { prisma } from "@/src/lib/prisma"
 import { revalidatePath } from "next/cache"
 
-export async function deleteProduct(id: number) {
-    if (!id || typeof id !== 'number' || Number.isNaN(id) || id <= 0) {
+export async function deleteProduct(id: number | bigint) {
+    // Convertir a BigInt si es necesario
+    const productId = typeof id === 'bigint' ? id : BigInt(id)
+    
+    if (!id || id <= 0) {
         return {
             errors: [{ message: 'ID de producto inválido' }]
         }
@@ -13,11 +16,11 @@ export async function deleteProduct(id: number) {
     try {
         // Delete related order items first to satisfy FK constraints
         await prisma.orderProducts.deleteMany({
-            where: { productId: id }
+            where: { productId }
         })
 
         await prisma.product.delete({
-            where: { id }
+            where: { id: productId }
         })
 
         revalidatePath('/admin/products')

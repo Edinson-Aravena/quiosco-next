@@ -8,8 +8,7 @@ async function searchProducts(searchTerm: string) {
     const products = await prisma.product.findMany({
         where: {
             name: {
-                contains: searchTerm,
-                mode: 'insensitive'
+                contains: searchTerm
             }
         },
         include: {

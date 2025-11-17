@@ -5,6 +5,34 @@ import UsersTable from "@/components/admin/UsersTable";
 
 async function getUsers() {
   const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      name: true,
+      lastname: true,
+      phone: true,
+      image: true,
+      role: true,
+      createdAt: true,
+      updatedAt: true,
+      roles: {
+        include: {
+          role: true
+        }
+      },
+      addresses: true,
+      ordersAsClient: {
+        select: {
+          id: true
+        }
+      },
+      ordersAsDelivery: {
+        select: {
+          id: true
+        }
+      }
+    },
     orderBy: {
       createdAt: 'desc'
     }
@@ -29,18 +57,26 @@ export default async function UsersPage() {
           </svg>
           Roles disponibles
         </h3>
-        <div className="space-y-2 text-sm text-gray-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-700">
           <div className="flex items-start gap-2">
             <span className="font-semibold">🍽️ Garzón:</span>
-            <span>Solo puede acceder al quiosco para tomar pedidos</span>
+            <span>Acceso al quiosco para tomar pedidos</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-semibold">👨‍🍳 Chef:</span>
-            <span>Solo puede ver y gestionar órdenes en la cocina</span>
+            <span>Ver y gestionar órdenes en la cocina</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="font-semibold">👑 Administrador:</span>
-            <span>Acceso total al sistema (productos, órdenes, usuarios)</span>
+            <span>Acceso total al sistema</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="font-semibold">🛵 Repartidor:</span>
+            <span>Gestionar entregas de la app móvil</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="font-semibold">👤 Cliente:</span>
+            <span>Usuario de la app móvil</span>
           </div>
         </div>
       </div>

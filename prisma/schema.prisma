@@ -49,6 +49,7 @@ model Order {
   total             Float
   date              DateTime        @default(now())
   status            Boolean         @default(false)
+  orderType         OrderType       @default(QUIOSCO) @map("order_type")
   orderInProgressAt DateTime?       @map("order_in_progress_at")
   orderReadyAT      DateTime?       @map("order_ready_at")
   orderDeliveredAt  DateTime?       @map("order_delivered_at")
@@ -78,7 +79,7 @@ model User {
   phone            String?        @unique @db.VarChar(90)
   image            String?        @db.VarChar(255)
   password         String         @db.VarChar(255)
-  role             UserRole       @default(WAITER)
+  role             UserRole?
   createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt        DateTime       @updatedAt @map("updated_at") @db.Timestamp(0)
   roles            UserHasRole[]
@@ -141,6 +142,9 @@ model DeliveryOrder {
   lng                 Float?                     @db.Double
   status              String                     @db.VarChar(90)
   timestamp           BigInt
+  orderInProgressAt   DateTime?                  @map("order_in_progress_at")
+  orderReadyAt        DateTime?                  @map("order_ready_at")
+  orderDeliveredAt    DateTime?                  @map("order_delivered_at")
   createdAt           DateTime                   @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt           DateTime                   @updatedAt @map("updated_at") @db.Timestamp(0)
   client              User                       @relation("ClientOrders", fields: [clientId], references: [id], onUpdate: Cascade, onDelete: Cascade)
@@ -172,4 +176,9 @@ enum UserRole {
   CLIENTE
   RESTAURANTE
   REPARTIDOR
+}
+
+enum OrderType {
+  QUIOSCO
+  DELIVERY
 }

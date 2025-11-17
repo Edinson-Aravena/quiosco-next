@@ -28,6 +28,9 @@ async function main(){
             create: {
                 username: 'admin',
                 password: hashedPassword,
+                name: 'Administrador',
+                email: 'admin@admin.com',
+                phone: '1234567890',
                 role: 'ADMIN'
             }
         })

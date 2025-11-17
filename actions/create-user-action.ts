@@ -9,13 +9,14 @@ export async function createUserAction(formData: FormData) {
     const password = formData.get('password') as string;
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
+    const phone = formData.get('phone') as string;
     const role = formData.get('role') as string;
 
     // Validaciones
-    if (!username || !password || !role || !name) {
+    if (!username || !password || !role) {
       return {
         success: false,
-        error: 'Todos los campos son requeridos'
+        error: 'Usuario, contraseña y rol son requeridos'
       };
     }
 
@@ -29,8 +30,9 @@ export async function createUserAction(formData: FormData) {
     // Llamar a la API del backend para crear el usuario
     const response = await createUserApi({
       username,
-      email,
-      name,
+      email: email || undefined,
+      name: name || username,
+      phone: phone || undefined,
       password,
       role
     });

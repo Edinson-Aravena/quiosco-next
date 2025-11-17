@@ -1,30 +1,10 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { prisma } from "@/src/lib/prisma";
 import Heading from "@/components/ui/Heading";
 import Logo from "@/components/ui/Logo";
 import { logoutAction } from "@/actions/login-action";
 import ChefOrdersList from "@/components/order/ChefOrdersList";
-
-async function getOrders() {
-  const orders = await prisma.order.findMany({
-    where: {
-      status: false,
-      orderReadyAT: null
-    },
-    include: {
-      orderProducts: {
-        include: {
-          product: true
-        }
-      }
-    },
-    orderBy: {
-      date: 'asc'
-    }
-  });
-  return orders;
-}
+import { getChefOrdersAction } from "@/actions/get-chef-orders-action";
 
 async function checkAuth() {
   const cookieStore = await cookies();
@@ -46,10 +26,10 @@ async function checkAuth() {
 
 export default async function ChefPage() {
   const user = await checkAuth();
-  const orders = await getOrders();
+  const orders = await getChefOrdersAction();
 
-  const pendingOrders = orders.filter(order => !order.orderInProgressAt);
-  const inProgressOrders = orders.filter(order => order.orderInProgressAt && !order.orderReadyAT);
+  const pendingOrders = orders.filter(order => order.prepStatus === 'PENDING');
+  const inProgressOrders = orders.filter(order => order.prepStatus === 'IN_PROGRESS');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-yellow-50">

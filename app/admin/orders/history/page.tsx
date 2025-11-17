@@ -31,7 +31,9 @@ async function getAllOrders(
     whereClause.name = filterTable;
   }
 
-  const [orders, totalOrders] = await Promise.all([
+  // Obtener órdenes del quiosco y delivery en paralelo
+  const [quioscoOrders, deliveryOrders, totalQuiosco, totalDelivery] = await Promise.all([
+    // Órdenes del quiosco
     prisma.order.findMany({
       take: pageSize,
       skip,
@@ -47,60 +49,66 @@ async function getAllOrders(
         }
       }
     }),
-    prisma.order.count({ where: whereClause })
+    // Órdenes de delivery
+    prisma.deliveryOrder.findMany({
+      where: {
+        status: 'ENTREGADO'
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        client: true,
+        address: true,
+        orderProducts: {
+          include: {
+            product: true
+          }
+        }
+      }
+    }),
+    prisma.order.count({ where: whereClause }),
+    prisma.deliveryOrder.count({ where: { status: 'ENTREGADO' } })
   ]);
 
-  return { orders, totalOrders };
-}
-
-async function getOrderStats() {
-  const now = new Date();
-  
-  // Inicio del día actual (00:00:00)
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  
-  // Inicio de la semana (lunes)
-  const startOfWeek = new Date(now);
-  const day = startOfWeek.getDay();
-  const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
-  startOfWeek.setDate(diff);
-  startOfWeek.setHours(0, 0, 0, 0);
-  
-  // Inicio del mes
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  // Ganancias del día (solo órdenes entregadas)
-  const dailyOrders = await prisma.order.aggregate({
-    _sum: { total: true },
-    where: {
-      date: { gte: startOfDay },
-      orderDeliveredAt: { not: null }
-    }
+  // Mapear órdenes de delivery al formato unificado
+  const mappedDeliveryOrders = deliveryOrders.map(order => {
+    const total = order.orderProducts.reduce((sum, op) => 
+      sum + (Number(op.quantity) * Number(op.product.price)), 0
+    );
+    
+    return {
+      id: order.id,
+      type: 'DELIVERY' as const,
+      customerName: order.client.name,
+      address: `${order.address.address}, ${order.address.neighborhood}`,
+      total,
+      date: new Date(Number(order.timestamp)),
+      orderProducts: order.orderProducts.map(op => ({
+        quantity: Number(op.quantity),
+        product: op.product
+      }))
+    };
   });
 
-  // Ganancias de la semana
-  const weeklyOrders = await prisma.order.aggregate({
-    _sum: { total: true },
-    where: {
-      date: { gte: startOfWeek },
-      orderDeliveredAt: { not: null }
-    }
-  });
+  // Mapear órdenes del quiosco
+  const mappedQuioscoOrders = quioscoOrders.map(order => ({
+    id: order.id,
+    type: 'QUIOSCO' as const,
+    name: order.name,
+    total: order.total,
+    date: order.date,
+    orderProducts: order.orderProducts
+  }));
 
-  // Ganancias del mes
-  const monthlyOrders = await prisma.order.aggregate({
-    _sum: { total: true },
-    where: {
-      date: { gte: startOfMonth },
-      orderDeliveredAt: { not: null }
-    }
-  });
+  // Combinar todas las órdenes y ordenar por fecha
+  const allOrders = [...mappedQuioscoOrders, ...mappedDeliveryOrders]
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .slice(0, pageSize);
 
-  return {
-    daily: dailyOrders._sum.total || 0,
-    weekly: weeklyOrders._sum.total || 0,
-    monthly: monthlyOrders._sum.total || 0
-  };
+  const totalOrders = totalQuiosco + totalDelivery;
+
+  return { orders: allOrders, totalOrders };
 }
 
 export default async function OrderHistoryPage({
@@ -124,10 +132,12 @@ export default async function OrderHistoryPage({
     orderBy: { name: 'asc' }
   });
 
-  const [{ orders, totalOrders }, stats] = await Promise.all([
-    getAllOrders(page, pageSize, filterCategory, filterTable),
-    getOrderStats()
-  ]);
+  const categoriesForFilter = categories.map(cat => ({
+    ...cat,
+    id: Number(cat.id)
+  }));
+
+  const { orders, totalOrders } = await getAllOrders(page, pageSize, filterCategory, filterTable);
 
   const totalPages = Math.ceil(totalOrders / pageSize);
 
@@ -147,11 +157,14 @@ export default async function OrderHistoryPage({
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-        <div className="flex items-center justify-between mb-6">
-          <Heading>Historial de Órdenes</Heading>
+        <div className="flex items-center justify-between">
+          <div>
+            <Heading>Historial de Órdenes</Heading>
+            <p className="text-gray-600 mt-2">Registro completo de todas las órdenes completadas</p>
+          </div>
           <Link
             href="/admin/orders"
-            className="text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-2"
+            className="text-amber-600 hover:text-amber-700 font-semibold flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-amber-50 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -159,39 +172,58 @@ export default async function OrderHistoryPage({
             Volver a Órdenes Pendientes
           </Link>
         </div>
-
-        {/* Estadísticas de Ganancias */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-semibold">Ganancias Diarias</p>
-                <p className="text-3xl font-bold mt-1">{formatCurrency(stats.daily)}</p>
-                <p className="text-green-100 text-xs mt-1">Hoy</p>
+        
+        {/* Resumen rápido */}
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl">
+                📋
               </div>
-              <div className="text-5xl opacity-80">💰</div>
+              <div>
+                <p className="text-sm font-semibold text-blue-900">Total Órdenes</p>
+                <p className="text-2xl font-bold text-blue-700">{totalOrders}</p>
+              </div>
             </div>
           </div>
-
-          <div className="bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-semibold">Ganancias Semanales</p>
-                <p className="text-3xl font-bold mt-1">{formatCurrency(stats.weekly)}</p>
-                <p className="text-blue-100 text-xs mt-1">Esta semana</p>
+          
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl">
+                🏪
               </div>
-              <div className="text-5xl opacity-80">📊</div>
+              <div>
+                <p className="text-sm font-semibold text-purple-900">Órdenes Local</p>
+                <p className="text-2xl font-bold text-purple-700">
+                  {orders.filter(o => o.type === 'QUIOSCO').length}
+                </p>
+              </div>
             </div>
           </div>
-
-          <div className="bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm font-semibold">Ganancias Mensuales</p>
-                <p className="text-3xl font-bold mt-1">{formatCurrency(stats.monthly)}</p>
-                <p className="text-purple-100 text-xs mt-1">Este mes</p>
+          
+          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white text-2xl">
+                🏍️
               </div>
-              <div className="text-5xl opacity-80">🎯</div>
+              <div>
+                <p className="text-sm font-semibold text-orange-900">Órdenes Delivery</p>
+                <p className="text-2xl font-bold text-orange-700">
+                  {orders.filter(o => o.type === 'DELIVERY').length}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-2xl">
+                📄
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-green-900">Página Actual</p>
+                <p className="text-2xl font-bold text-green-700">{page} de {totalPages}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -199,7 +231,7 @@ export default async function OrderHistoryPage({
 
       {/* Filtros */}
       <OrderHistoryFilters
-        categories={categories}
+        categories={categoriesForFilter as any}
         filterCategory={filterCategory}
         filterTable={filterTable}
       />
@@ -213,7 +245,8 @@ export default async function OrderHistoryPage({
                 <thead className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-bold">ID</th>
-                    <th className="px-6 py-4 text-left text-sm font-bold">Mesa</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold">Tipo</th>
+                    <th className="px-6 py-4 text-left text-sm font-bold">Cliente/Mesa</th>
                     <th className="px-6 py-4 text-left text-sm font-bold">Productos</th>
                     <th className="px-6 py-4 text-left text-sm font-bold">Total</th>
                     <th className="px-6 py-4 text-left text-sm font-bold">Fecha</th>
@@ -221,28 +254,47 @@ export default async function OrderHistoryPage({
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {orders.map((order, index) => {
+                    const isDelivery = order.type === 'DELIVERY';
                     return (
                       <tr
-                        key={order.id}
+                        key={`${order.type}-${order.id}`}
                         className={`hover:bg-gray-50 transition-colors ${
-                          index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                          isDelivery ? 'bg-blue-50/30' : index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                         }`}
                       >
                         <td className="px-6 py-4 text-sm font-semibold text-gray-900">
                           #{order.id}
                         </td>
                         <td className="px-6 py-4">
+                          {isDelivery ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
+                              📱 Delivery
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-bold">
+                              🏪 Local
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                              {order.name}
+                            <div className={`w-8 h-8 ${isDelivery ? 'bg-blue-500' : 'bg-amber-500'} rounded-full flex items-center justify-center text-white font-bold text-sm`}>
+                              {isDelivery ? (order as any).customerName.charAt(0) : (order as any).name}
                             </div>
-                            <span className="font-medium text-gray-900">{order.name}</span>
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {isDelivery ? (order as any).customerName : `Mesa ${(order as any).name}`}
+                              </div>
+                              {isDelivery && (
+                                <div className="text-xs text-gray-500">{(order as any).address}</div>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="space-y-1">
-                            {order.orderProducts.map((item) => (
-                              <div key={item.id} className="text-sm text-gray-600">
+                            {order.orderProducts.map((item, idx) => (
+                              <div key={idx} className="text-sm text-gray-600">
                                 <span className="font-semibold text-gray-900">{item.quantity}x</span> {item.product.name}
                               </div>
                             ))}
