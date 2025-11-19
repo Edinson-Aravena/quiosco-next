@@ -43,6 +43,7 @@ const OrderSummary = () => {
     const data = {
       name: formData.get('name'),
       total,
+      anotaciones: formData.get('anotaciones') || undefined,
       order: order.map(item => ({
         id: typeof item.id === 'bigint' ? Number(item.id) : Number(item.id),
         name: String(item.name),
@@ -208,6 +209,19 @@ const OrderSummary = () => {
                     }
                   }
                 }}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Anotaciones (Opcional)
+              </label>
+              <textarea
+                id="anotaciones"
+                name="anotaciones"
+                placeholder="Ej: Churrasco sin mayonesa, arroz sin pimentón..."
+                rows={3}
+                className="bg-gray-50 border-2 border-gray-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 rounded-lg p-2.5 w-full text-sm text-gray-900 transition-all outline-none resize-none"
               />
             </div>
 

@@ -5,6 +5,7 @@ import { Order } from '@prisma/client';
 export const OrderSchema = z.object({
     name: z.string().min(1, 'El nombre es obligatorio'),
     total: z.number().min(1, 'Hay errores en el pedido'),
+    anotaciones: z.string().optional(),
     order: z.array(z.object({
         id: z.union([z.number(), z.bigint()]).transform(val => typeof val === 'bigint' ? Number(val) : val),
         name: z.string(),

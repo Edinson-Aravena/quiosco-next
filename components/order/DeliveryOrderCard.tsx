@@ -122,15 +122,15 @@ export default function DeliveryOrderCard({ order, onUpdate }: Props) {
                 </div>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="p-4 space-y-3">
                 {/* Cliente */}
-                <div className="flex items-center gap-3 pt-2">
-                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${statusConfig.bgColor} flex items-center justify-center text-2xl shadow-md`}>
+                <div className="flex items-center gap-2">
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${statusConfig.bgColor} flex items-center justify-center text-xl`}>
                         {statusConfig.icon}
                     </div>
                     <div>
-                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Cliente</p>
-                        <p className="text-lg font-bold text-gray-900">
+                        <p className="text-xs text-gray-500 font-medium uppercase">Cliente</p>
+                        <p className="text-base font-bold text-gray-900">
                             {order.client?.name} {order.client?.lastname}
                         </p>
                         {order.client?.phone && (
@@ -141,11 +141,11 @@ export default function DeliveryOrderCard({ order, onUpdate }: Props) {
 
                 {/* Dirección */}
                 {order.address && (
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="bg-gray-50 rounded-lg p-2">
                         <div className="flex items-start gap-2">
-                            <span className="text-lg">📍</span>
+                            <span className="text-base">📍</span>
                             <div>
-                                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Dirección de entrega</p>
+                                <p className="text-xs text-gray-500 font-medium uppercase">Dirección</p>
                                 <p className="text-sm font-semibold text-gray-800">{order.address.address}</p>
                                 <p className="text-xs text-gray-600">{order.address.neighborhood}</p>
                             </div>
@@ -155,25 +155,18 @@ export default function DeliveryOrderCard({ order, onUpdate }: Props) {
 
                 {/* Productos */}
                 <div>
-                    <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg">🍽️</span>
-                        <p className="text-sm font-bold text-gray-700 uppercase tracking-wide">Productos</p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 space-y-3 max-h-48 overflow-y-auto">
+                    <p className="text-xs font-bold text-gray-600 uppercase mb-2">🍽️ Productos</p>
+                    <div className="bg-gray-50 rounded-lg p-2 space-y-1">
                         {order.deliveryOrderProducts.map((item, idx) => (
                             <div
                                 key={idx}
-                                className="flex items-center gap-3 pb-3 border-b border-gray-200 last:border-b-0 last:pb-0"
+                                className="flex items-center gap-2 py-1"
                             >
-                                <div className={`flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br ${statusConfig.badgeBg} flex items-center justify-center text-white font-bold text-sm shadow-md`}>
+                                <div className={`flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br ${statusConfig.badgeBg} flex items-center justify-center text-white font-bold text-xs`}>
                                     {item.quantity}
                                 </div>
                                 <p className="flex-1 text-sm font-medium text-gray-800">
                                     {item.product.name}
-                                </p>
-                                <p className="text-xs text-gray-500 font-semibold">
-                                    {formatCurrency(item.product.price * item.quantity)}
                                 </p>
                             </div>
                         ))}
@@ -181,26 +174,23 @@ export default function DeliveryOrderCard({ order, onUpdate }: Props) {
                 </div>
 
                 {/* Total */}
-                <div className="flex items-center justify-between pt-4 border-t-2 border-dashed border-gray-300">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xl">💰</span>
-                        <p className="text-base font-bold text-gray-700">Total</p>
-                    </div>
-                    <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">
+                <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                    <p className="text-sm font-bold text-gray-700">💰 Total</p>
+                    <p className="text-xl font-bold text-green-600">
                         {formatCurrency(total)}
                     </p>
                 </div>
 
                 {/* Asignación de repartidor o info del repartidor */}
                 {isPending ? (
-                    <div className="space-y-3">
-                        <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    <div className="space-y-2">
+                        <label className="block text-xs font-bold text-gray-700 uppercase">
                             🛵 Asignar Repartidor
                         </label>
                         <select
                             value={selectedDelivery}
                             onChange={(e) => setSelectedDelivery(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
                         >
                             <option value="">Selecciona un repartidor</option>
                             {deliveryUsers.map((user) => (
@@ -212,7 +202,7 @@ export default function DeliveryOrderCard({ order, onUpdate }: Props) {
                         <button
                             onClick={handleAssignDelivery}
                             disabled={isAssigning || !selectedDelivery}
-                            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold text-base py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold text-sm py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isAssigning ? (
                                 <>
@@ -230,16 +220,13 @@ export default function DeliveryOrderCard({ order, onUpdate }: Props) {
                         </button>
                     </div>
                 ) : (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="text-lg">🛵</span>
-                            <p className="text-sm font-bold text-gray-700 uppercase tracking-wide">Repartidor Asignado</p>
-                        </div>
-                        <p className="text-lg font-bold text-blue-900">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p className="text-xs font-bold text-gray-700 uppercase mb-1">🛵 Repartidor</p>
+                        <p className="text-base font-bold text-blue-900">
                             {order.delivery?.name} {order.delivery?.lastname}
                         </p>
                         {order.delivery?.phone && (
-                            <p className="text-sm text-blue-700 mt-1">📞 {order.delivery.phone}</p>
+                            <p className="text-xs text-blue-700 mt-1">📞 {order.delivery.phone}</p>
                         )}
                     </div>
                 )}

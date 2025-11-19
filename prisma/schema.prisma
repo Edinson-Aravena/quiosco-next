@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 // Modelo de Categorías (combinado para ambos sistemas)
@@ -47,6 +46,7 @@ model Order {
   id                Int             @id @default(autoincrement())
   name              String          @db.VarChar(255)
   total             Float
+  anotaciones       String?         @db.Text
   date              DateTime        @default(now())
   status            Boolean         @default(false)
   orderType         OrderType       @default(QUIOSCO) @map("order_type")

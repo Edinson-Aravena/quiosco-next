@@ -108,70 +108,73 @@ export default function ChefOrderCard({ order, onComplete }: ChefOrderCardProps)
         </div>
       </div>
 
-      <div className="p-6 space-y-5">
+      <div className="p-4 space-y-3">
         {/* Cliente */}
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-2xl">
+        <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-lg border border-blue-200">
+          <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-2xl flex-shrink-0">
             👤
           </div>
-          <div className="flex-1">
-            <p className="text-xs text-gray-500 font-semibold">Cliente</p>
-            <p className="text-lg font-bold text-gray-900">{order.customerName}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-blue-600 font-bold uppercase">Cliente</p>
+            <p className="text-lg font-black text-gray-900 truncate">{order.customerName}</p>
             {order.address && (
-              <p className="text-xs text-gray-600 mt-1">📍 {order.address}</p>
+              <p className="text-xs text-gray-700 font-semibold truncate">📍 {order.address}</p>
             )}
           </div>
         </div>
 
         {/* Productos */}
-        <div className="space-y-3 pt-3 border-t border-gray-200">
-          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">Productos</p>
-          <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+        <div className="space-y-2 pt-3 border-t-2 border-gray-200">
+          <p className="text-sm text-gray-600 font-bold uppercase tracking-wide">Productos a preparar</p>
+          <div className="space-y-1">
             {order.products.map((product, index) => (
               <div 
                 key={index}
-                className="bg-gradient-to-r from-gray-50 to-white p-3 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors"
+                className="flex items-center gap-2 py-1.5 px-2 bg-gray-50 rounded-lg"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-900 text-sm">{product.productName}</p>
-                    <p className="text-xs text-gray-600 flex items-center gap-2 mt-1">
-                      <span className="bg-gray-200 px-2 py-0.5 rounded-full font-semibold">
-                        {product.quantity}x
-                      </span>
-                      <span>{formatCurrency(product.price)}</span>
-                    </p>
-                  </div>
-                  <p className="font-bold text-gray-900 text-sm">
-                    {formatCurrency(product.subtotal)}
-                  </p>
+                <div className="bg-orange-500 text-white font-bold text-sm w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0">
+                  {product.quantity}
                 </div>
+                <p className="font-bold text-gray-900 text-base flex-1">{product.productName}</p>
               </div>
             ))}
           </div>
         </div>
 
+        {/* Anotaciones especiales */}
+        {order.anotaciones && (
+          <div className="space-y-2 pt-3 border-t-2 border-dashed border-amber-300 bg-amber-50 -mx-4 px-4 py-3 rounded-lg">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">📝</span>
+              <p className="text-sm text-amber-800 font-bold uppercase tracking-wide">Instrucciones Especiales</p>
+            </div>
+            <p className="text-sm text-gray-800 font-medium leading-relaxed bg-white p-3 rounded-lg border border-amber-200">
+              {order.anotaciones}
+            </p>
+          </div>
+        )}
+
         {/* Total y Botón */}
-        <div className="space-y-3 pt-4 border-t-2 border-dashed border-gray-300">
-          <div className="flex justify-between items-center">
-            <span className="text-lg font-bold text-gray-700">Total</span>
-            <span className="text-2xl font-black text-gray-900">
+        <div className="space-y-3 pt-3 border-t-2 border-dashed border-gray-300">
+          <div className="flex justify-between items-center bg-green-50 p-3 rounded-lg border border-green-200">
+            <span className="text-base font-bold text-gray-700">Total</span>
+            <span className="text-2xl font-black text-green-600">
               {formatCurrency(order.total)}
             </span>
           </div>
 
           <button
             onClick={handleOrderClick}
-            className={`w-full group/btn bg-gradient-to-r ${statusConfig.gradient} ${statusConfig.hoverGradient} text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3`}
+            className={`w-full group/btn bg-gradient-to-r ${statusConfig.gradient} ${statusConfig.hoverGradient} text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2`}
           >
             {statusConfig.buttonIcon}
-            <span className="text-base">{statusConfig.buttonText}</span>
+            <span className="text-sm">{statusConfig.buttonText}</span>
           </button>
 
           {/* Hora de inicio si está en progreso */}
           {order.startedAt && (
-            <div className="text-xs text-gray-500 text-center pt-2">
-              Iniciado: {new Date(order.startedAt).toLocaleTimeString('es-ES')}
+            <div className="text-xs text-gray-600 text-center font-semibold">
+              ⏱️ Iniciado: {new Date(order.startedAt).toLocaleTimeString('es-ES')}
             </div>
           )}
         </div>

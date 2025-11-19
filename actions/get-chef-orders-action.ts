@@ -7,6 +7,7 @@ export type ChefOrder = {
     orderType: 'QUIOSCO' | 'DELIVERY'
     customerName: string
     address: string | null
+    anotaciones: string | null
     total: number
     orderDate: Date
     prepStatus: 'PENDING' | 'IN_PROGRESS' | 'READY'
@@ -65,6 +66,7 @@ export async function getChefOrdersAction(): Promise<ChefOrder[]> {
             orderType: 'QUIOSCO' as const,
             customerName: order.name,
             address: null,
+            anotaciones: (order as any).anotaciones ?? null,
             total: order.total,
             orderDate: order.date,
             prepStatus: order.orderReadyAT ? 'READY' : 
@@ -90,6 +92,7 @@ export async function getChefOrdersAction(): Promise<ChefOrder[]> {
                 orderType: 'DELIVERY' as const,
                 customerName: order.client.name,
                 address: `${order.address.address}, ${order.address.neighborhood}`,
+                anotaciones: null,
                 total,
                 orderDate: new Date(Number(order.timestamp)),
                 prepStatus: order.orderReadyAt ? 'READY' : 
